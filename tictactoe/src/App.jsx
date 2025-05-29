@@ -1,7 +1,7 @@
 import './App.css';
 import Board from './Board';
 import Moves from './Moves';
-import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import React, { cloneElement, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import _ from "lodash";
 
 class BoardTree {
@@ -12,7 +12,7 @@ class BoardTree {
     this.column=column
     this.children=0
     this.wonBy=''
-    this.isActive=false
+    this.isActive=true
     if (depth==0) {
       return 0
     }
@@ -53,45 +53,75 @@ class BoardTree {
       return this.parent.isAnyParentWon();
     }
   }
-  setAllChildren(toSet) {
-    this.children.map((row)=>{row.map((child)=>{
-      if (this.depth>1) {
-        child.setAllChildren(toSet);
-      }
-      child.isActive=toSet;
-    })})
+  recurseThroughChildren(shiftedRoute) {
+    if (!(this.depth>1)) {
+      return
+    }
+    this.children.map((row)=>{row.map((child)=>{child.setActiveStatus(shiftedRoute)})})
+    return
   }
-  setActiveStatus(shiftedRoute) {
-    //third time's the charm
-    if (shiftedRoute.length==0) {
+  adjustActiveStatus(shiftedRoute) {
+    if (this.parent==null) {
       this.isActive=true;
-      this.setAllChildren(true);
-      return;
     }
-    console.log('og')
-    console.log(shiftedRoute)
-    const unusedCoords=shiftedRoute.splice(2);
-    if (this.row!=shiftedRoute[0] || this.column!=shiftedRoute[1]) {
-      console.log(this.depth)
-      console.log(this)
-      console.log(shiftedRoute)
-      console.log(unusedCoords)
-      this.isActive=false;
-      this.setAllChildren(false)
+    else if (this.parent.isActive==false) {
+      this.isActive=false
     }
-    if (this.wonBy!='') {
-      this.parent.children.map((row)=>{row.map((child)=>{
-        child.setActiveStatus(unusedCoords);
-      })})
+    else if (this.wonBy!=='') {
+      this.isActive=false
     }
-    else if (this.depth==1) {
-      this.isActive=true;
+    else if (this.parent.children[shiftedRoute[shiftedRoute.length-(this.depth*2)]][shiftedRoute[shiftedRoute.length-(this.depth*2)+1]].wonBy!=='') {
+      this.isActive=true
+    }
+    else if (this.row==shiftedRoute[shiftedRoute.length-(this.depth*2)] && this.column==shiftedRoute[shiftedRoute.length-(this.depth*2)+1]) {
+      this.isActive=true
     }
     else {
-      this.children[shiftedRoute[0]][shiftedRoute[1]].setActiveStatus(unusedCoords);
+      this.isActive=false
+    }
+  }
+  setActiveStatus(shiftedRoute) {
+    this.adjustActiveStatus(shiftedRoute)
+    if (this.depth>1) {
+      this.children.map((row)=>{row.map((board)=>{board.setActiveStatus(shiftedRoute)})})
     }
   }
 }
+// setActiveStatus(shiftedRoute) {
+//   //third time's the charm
+//   if (this.parent==null) {
+//     this.isActive=true;
+//     this.recurseThroughChildren(shiftedRoute);
+//     return;
+//   }
+//   //console.log(this.parent)
+//   if (!this.parent.isActive) {
+//     //console.log(this)
+//     this.isActive=false;
+//     this.recurseThroughChildren(shiftedRoute);
+//     return;
+//   }
+//   if (this.row==shiftedRoute[shiftedRoute.length-(this.depth*2)] && this.column==shiftedRoute[shiftedRoute.length-(this.depth*2)+1]) {
+//     if (this.wonBy!='') {
+//       this.parent.children.map((row)=>{row.map((child)=>{child.isActive=true;console.log(child);})});
+//       this.isActive=false;
+//       this.recurseThroughChildren(shiftedRoute);
+//       return;
+//     }
+//     this.isActive=true;
+//     this.recurseThroughChildren(shiftedRoute);
+//     return;
+//   }
+//   
+//   //fall through
+//   this.isActive=false;
+//   this.recurseThroughChildren(shiftedRoute);
+//   return;
+//   //if (this.depth>1) {
+//   //  this.recurseThroughChildren(shiftedRoute)
+//   //}
+// }
+//
 
 function checkWin(toCheck) {
   const winconditions = [[[0, 0], [0, 1], [0, 2]], [[1, 0], [1, 1], [1, 2]], [[2, 0], [2, 1], [2, 2]], [[0, 0], [1, 0], [2, 0]], [[0, 1], [1, 1], [2, 1]], [[0, 2], [1, 2], [2, 2]], [[0, 2], [1, 1], [2, 0]], [[0, 0], [1, 1], [2, 2]]]
@@ -104,9 +134,6 @@ function checkWin(toCheck) {
 }
 
 function calculateShift(previousMove) {
-  if (previousMove.length==0) {
-    return []
-  }
   const route=previousMove[0].getFullRoute([previousMove[1],previousMove[2]]);
   const winDepth=previousMove[3];
   const length=route.length;
@@ -128,8 +155,6 @@ export default function App() {
   const [winDepth, setWinDepth] = useState(0);
 
   const handleMove = useCallback((event,treeNode,row,column) => {
-    boardTree.setActiveStatus(calculateShift(previousMove))
-    console.log(boardTree)
     //treeNode is always the parent board of the move played, not the move itself
     let winDepth=0;
     if (treeNode.children[row][column].wonBy!='') {
@@ -143,7 +168,6 @@ export default function App() {
     treeNode.children[row][column].wonBy=currentPlayer;
     setMoveList(moveList.concat([treeNode.getFullRoute([row,column])]));
     event.target.innerHTML=currentPlayer;
-    console.log(moveList);
 
     let currentBoard=treeNode;
     let coords=[];
@@ -156,11 +180,14 @@ export default function App() {
       winDepth++;
     }
 
+    boardTree.setActiveStatus(calculateShift([treeNode,row,column,winDepth]))
+
     setWinDepth(winDepth);
     setCurrentPlayer(players[(players.indexOf(currentPlayer)+1)%2]);
     setPreviousMove([treeNode,row,column,winDepth]);
     setActiveBoard(calculateShift([treeNode,row,column,winDepth]));
-    setBoardTree(boardTree)
+    console.log(_.cloneDeep(boardTree));
+    setBoardTree(_.cloneDeep(boardTree));
   },[currentPlayer, boardTree, previousMove, players, moveList]);
 
   return (
