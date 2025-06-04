@@ -3,7 +3,7 @@ export default function Board(props) {
     const columns=[0,1,2];
     const letters=['A','B','C']
     let wonByFlag=false;
-    const boardActiveFlag=(props.treeNode.isActive);
+    const boardActiveFlag=(props.treeNode.isActive && props.depth==1);
     if (props.treeNode.wonBy!='') {
         wonByFlag=true;
     }
@@ -39,6 +39,7 @@ export default function Board(props) {
                                     }}>
                                     </button>
                                 )}
+                                <h1 style={{color:"rgb(134, 0, 0)"}}>{row==2&&props.depth==props.dimension?(column+1):''}</h1>
                             </td>
                         ))}
                     </tr>

@@ -34,32 +34,6 @@ class BoardTree {
     }
     return route
   }
-  navigateTo(coordRoute) {
-    //'this' is starting board for coordinate transformation
-    let start=this;
-    for (let pair=0;pair<coordRoute.length;pair+=2) {
-      start=start.children[coordRoute[pair]][coordRoute[pair+1]];
-    }
-    return start
-  }
-  isAnyParentWon() {
-    if (this.wonBy!='') {
-      return true;
-    }
-    else if (this.parent==null) {
-      return false;
-    }
-    else {
-      return this.parent.isAnyParentWon();
-    }
-  }
-  recurseThroughChildren(shiftedRoute) {
-    if (!(this.depth>1)) {
-      return
-    }
-    this.children.map((row)=>{row.map((child)=>{child.setActiveStatus(shiftedRoute)})})
-    return
-  }
   adjustActiveStatus(shiftedRoute) {
     if (this.parent==null) {
       this.isActive=true;
@@ -87,41 +61,6 @@ class BoardTree {
     }
   }
 }
-// setActiveStatus(shiftedRoute) {
-//   //third time's the charm
-//   if (this.parent==null) {
-//     this.isActive=true;
-//     this.recurseThroughChildren(shiftedRoute);
-//     return;
-//   }
-//   //console.log(this.parent)
-//   if (!this.parent.isActive) {
-//     //console.log(this)
-//     this.isActive=false;
-//     this.recurseThroughChildren(shiftedRoute);
-//     return;
-//   }
-//   if (this.row==shiftedRoute[shiftedRoute.length-(this.depth*2)] && this.column==shiftedRoute[shiftedRoute.length-(this.depth*2)+1]) {
-//     if (this.wonBy!='') {
-//       this.parent.children.map((row)=>{row.map((child)=>{child.isActive=true;console.log(child);})});
-//       this.isActive=false;
-//       this.recurseThroughChildren(shiftedRoute);
-//       return;
-//     }
-//     this.isActive=true;
-//     this.recurseThroughChildren(shiftedRoute);
-//     return;
-//   }
-//   
-//   //fall through
-//   this.isActive=false;
-//   this.recurseThroughChildren(shiftedRoute);
-//   return;
-//   //if (this.depth>1) {
-//   //  this.recurseThroughChildren(shiftedRoute)
-//   //}
-// }
-//
 
 function checkWin(toCheck) {
   const winconditions = [[[0, 0], [0, 1], [0, 2]], [[1, 0], [1, 1], [1, 2]], [[2, 0], [2, 1], [2, 2]], [[0, 0], [1, 0], [2, 0]], [[0, 1], [1, 1], [2, 1]], [[0, 2], [1, 2], [2, 2]], [[0, 2], [1, 1], [2, 0]], [[0, 0], [1, 1], [2, 2]]]
@@ -151,7 +90,6 @@ export default function App() {
   const [currentPlayer, setCurrentPlayer] = useState(players[0]);
   const [boardTree, setBoardTree] = useState(new BoardTree(null,dimension,0,0));
   const [previousMove, setPreviousMove] = useState([]);
-  const [activeBoard, setActiveBoard] = useState([]);
   const [winDepth, setWinDepth] = useState(0);
 
   const handleMove = useCallback((event,treeNode,row,column) => {
@@ -174,6 +112,10 @@ export default function App() {
     while (checkWin(currentBoard)) {
       alert(`${currentPlayer} won!`);
       coords=[currentBoard.row,currentBoard.column];
+      if (currentBoard.parent==null) {
+        alert(`${currentPlayer} full win`)
+        return
+      }
       currentBoard=currentBoard.parent;
       //this line has changed according to "new standards":
       currentBoard.children[coords[0]][coords[1]].wonBy=currentPlayer;
@@ -185,9 +127,7 @@ export default function App() {
     setWinDepth(winDepth);
     setCurrentPlayer(players[(players.indexOf(currentPlayer)+1)%2]);
     setPreviousMove([treeNode,row,column,winDepth]);
-    setActiveBoard(calculateShift([treeNode,row,column,winDepth]));
-    console.log(_.cloneDeep(boardTree));
-    setBoardTree(_.cloneDeep(boardTree));
+    setBoardTree(boardTree);
   },[currentPlayer, boardTree, previousMove, players, moveList]);
 
   return (
@@ -203,7 +143,7 @@ export default function App() {
         display:"flex"
       }}>
         <Moves moveList={moveList} />
-        <Board depth={dimension} row={0} column={0} handleMove={handleMove} treeNode={boardTree} activeBoard={activeBoard} winDepth={winDepth} previousMove={previousMove} dimension={dimension} />
+        <Board depth={dimension} row={0} column={0} handleMove={handleMove} treeNode={boardTree} winDepth={winDepth} previousMove={previousMove} dimension={dimension} />
       </div>
     </div>
   );
