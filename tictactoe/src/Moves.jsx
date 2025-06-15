@@ -1,7 +1,7 @@
 export default function Board(props) {
     const letters=['A','B','C']
-    let scaledFontSize=(16/window.devicePixelRatio)+"px";
-    document.documentElement.style["font-size"] = scaledFontSize;
+    //let scaledFontSize=(16/window.devicePixelRatio)+"px";
+    //document.documentElement.style["font-size"] = scaledFontSize;
     return (
         <div style={{
             border:"5px solid #031433",

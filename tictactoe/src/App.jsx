@@ -83,7 +83,7 @@ function calculateShift(previousMove) {
 
 export default function App() {
   //'treeNode' is the board at which the click event happens
-  const dimension=3;
+  const dimension=5;
 
   const players=['X','O'];
   const [moveList, setMoveList] = useState([]);
