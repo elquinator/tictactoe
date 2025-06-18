@@ -1,6 +1,6 @@
 import './App.css';
 import Board from './Board';
-import Moves,{Premover} from './Moves';
+import Moves,{Premover,GameAutomation} from './Moves';
 import React, { cloneElement, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import _ from "lodash";
 
@@ -159,6 +159,7 @@ export default function App() {
       }}>
         <Moves moveList={moveList} />
         <Premover handleMove={handleMove} currentPlayer={currentPlayer} />
+        <GameAutomation />
         <Board depth={dimension} row={0} column={0} handleMove={handleMove} treeNode={boardTree} winDepth={winDepth} previousMove={previousMove} dimension={dimension} />
       </div>
     </div>

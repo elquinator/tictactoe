@@ -1,6 +1,29 @@
 import {useCallback} from "react";
 import {debugLog} from "./App";
 
+export function GameAutomation(props) {
+    const hostName = "localhost";
+    const port = 3030;
+    const createGame = async () => {
+        const path = "games";
+        const url = `http://${hostName}:${port}/${path}`;
+        const response = await fetch(url, {
+            method: "POST",
+            body: {
+            
+            }
+        });
+        console.log("Got response ", response);
+    };
+    return (
+        <div>
+            <button onClick={createGame}>
+                create game
+            </button>
+        </div>
+    );
+}
+
 export function Premover(props) {
     const premove = useCallback((coordinates) => {
         // Create a fake DOM element if the real one doesn't exist
