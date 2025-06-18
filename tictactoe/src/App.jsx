@@ -1,8 +1,23 @@
 import './App.css';
 import Board from './Board';
-import Moves from './Moves';
+import Moves,{Premover} from './Moves';
 import React, { cloneElement, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import _ from "lodash";
+
+const NS_DEBUG_NAMES = {
+    "MOVE_RECORDER": false,
+    "MOVE_CLICK": false,
+    "MOVER_DEBUG": false,
+    "SPEC_COMPARE": false,
+    "SHIFT_DEBUG": true,
+    "ERROR": true,
+};
+
+export const debugLog = (namespace, message, obj = null) => {
+    if (NS_DEBUG_NAMES[namespace]) {
+        console.log(`[${namespace}] ${message}`, obj);
+    }
+};
 
 class BoardTree {
   constructor(parent,depth,row,column) {
@@ -83,7 +98,7 @@ function calculateShift(previousMove) {
 
 export default function App() {
   //'treeNode' is the board at which the click event happens
-  const dimension=5;
+  const dimension=3;
 
   const players=['X','O'];
   const [moveList, setMoveList] = useState([]);
@@ -143,6 +158,7 @@ export default function App() {
         display:"flex"
       }}>
         <Moves moveList={moveList} />
+        <Premover handleMove={handleMove} currentPlayer={currentPlayer} />
         <Board depth={dimension} row={0} column={0} handleMove={handleMove} treeNode={boardTree} winDepth={winDepth} previousMove={previousMove} dimension={dimension} />
       </div>
     </div>
