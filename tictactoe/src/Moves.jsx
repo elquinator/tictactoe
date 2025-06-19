@@ -2,12 +2,12 @@ import {useCallback} from "react";
 import {debugLog} from "./App";
 
 export function GameAutomation(props) {
-    const hostName = "localhost";
+    const hostName = window.location.host.split(':')[0];
     const port = 3030;
 
     const createGame = useCallback(async() => {
-        const username = prompt("Username:");
-        props.setUsername(username);
+        //const username = prompt("Username:");
+        //props.setUsername(username);
         const path = "games";
         const url = `http://${hostName}:${port}/${path}`;
         const response = await fetch(url, {
@@ -23,9 +23,14 @@ export function GameAutomation(props) {
     }, [props]);
 
     const joinGame = useCallback(async () => {
+        let gameId = props.gameId;
+        if (props.gameId === '') {
+            gameId = prompt("gameID of game youre trying to join:");
+            props.setGameId(gameId);
+        }
         const username = prompt("Username:");
         props.setUsername(username);
-        const path = `game/${props.gameId}`;
+        const path = `game/${gameId}`;
         const url = `http://${hostName}:${port}/${path}`;
         const response = await fetch(url, {
             method: "PUT",

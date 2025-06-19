@@ -4,7 +4,7 @@ import Moves,{Premover,GameAutomation} from './Moves';
 import React, { cloneElement, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import _ from "lodash";
 
-const hostName = "localhost";
+const hostName = window.location.host.split(':')[0];
 const port = 3030;
 
 const NS_DEBUG_NAMES = {
@@ -114,15 +114,18 @@ export default function App() {
   const [gameId, setGameId] = useState('');
 
   useEffect(() => {
-    const interval = setInterval(() => {
+    const interval = setInterval(async () => {
       //get status on game start
-      const isGameStarted = (username!=='' && gameId!=='')?(async () => {
-        const path = `games/${gameId}`;
+      if (username!=='' && gameId!=='') {
+        const path = `game/${gameId}`;
         const url = `http://${hostName}:${port}/${path}`;
-        await fetch(url, { method: "GET" }).gameStarted}):'';
-        setGameStarted(isGameStarted);
+        const response = await fetch(url, { method: "GET" })
+        const jsonResponse = await response.json();
+        console.log(jsonResponse);
+        setGameStarted(jsonResponse.gameStarted);
+      };
       }, 5000);
-  }, []);
+  }, [username, gameId, setGameStarted]);
 
   const handleMove = useCallback((event,treeNode,row,column) => {
     //treeNode is always the parent board of the move played, not the move itself
@@ -157,7 +160,7 @@ export default function App() {
     boardTree.setActiveStatus(calculateShift([treeNode,row,column,winDepth]))
 
     setWinDepth(winDepth);
-    setCurrentPlayer(players[(players.indexOf(currentPlayer)+1)%2]);
+    setCurrentPlayer(currentPlayer==='X'?'O':'X');
     setPreviousMove([treeNode,row,column,winDepth]);
     setBoardTree(boardTree);
   },[currentPlayer, boardTree, previousMove, players, moveList]);
@@ -167,9 +170,9 @@ export default function App() {
       <div style={{
             backgroundColor: "#ddd"
         }}>
-        <h1>
+        {gameStarted&&(<h1>
           Player {currentPlayer} turn
-        </h1>
+        </h1>)}
       </div>
       <div style={{
         display:"flex"
@@ -177,9 +180,20 @@ export default function App() {
         {gameStarted?<Moves moveList={moveList} />:''}
         {gameStarted?<Premover handleMove={handleMove} currentPlayer={currentPlayer} />:''}
         <GameAutomation setUsername={setUsername} setGameId={setGameId} gameId={gameId} />
-        {(username==='')?(()=>{return ((gameStarted)?(<Board depth={dimension} row={0} column={0} handleMove={handleMove} treeNode={boardTree} winDepth={winDepth} previousMove={previousMove} dimension={dimension} />):(<div><h1>waiting for another player...</h1></div>))}):<div/>}
+        {username !== '' && gameStarted && (
+          <Board depth={dimension} row={0} column={0} handleMove={handleMove} treeNode={boardTree} winDepth={winDepth} previousMove={previousMove} dimension={dimension} />
+        )}
+        {username !== '' && !gameStarted && (
+          <div style={{
+            width:"100%",
+            alignContent: "center"
+          }}>
+            <h1>username: {username}</h1>
+            <h2>waiting for another player...</h2>
+            <p1>gameID: {gameId}</p1>
+          </div>
+        )}
       </div>
     </div>
   );
 }
-
