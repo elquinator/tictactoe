@@ -6,9 +6,6 @@ import _ from "lodash";
 
 const hostName = "localhost";
 const port = 3030;
-const gameID=481412
-const path = `games/${gameID}`;
-const url = `http://${hostName}:${port}/${path}`;
 
 const NS_DEBUG_NAMES = {
     "MOVE_RECORDER": false,
@@ -114,14 +111,18 @@ export default function App() {
   const [winDepth, setWinDepth] = useState(0);
   const [gameStarted, setGameStarted] = useState(false);
   const [username, setUsername] = useState('');
+  const [gameId, setGameId] = useState('');
 
   useEffect(() => {
     const interval = setInterval(() => {
       //get status on game start
-      const isGameStarted = (username!=='')?(async () => {await fetch(url, { method: "GET" }).gameStarted}):'';
-    setGameStarted(isGameStarted);
-    }, 5000);
-  })
+      const isGameStarted = (username!=='' && gameId!=='')?(async () => {
+        const path = `games/${gameId}`;
+        const url = `http://${hostName}:${port}/${path}`;
+        await fetch(url, { method: "GET" }).gameStarted}):'';
+        setGameStarted(isGameStarted);
+      }, 5000);
+  }, []);
 
   const handleMove = useCallback((event,treeNode,row,column) => {
     //treeNode is always the parent board of the move played, not the move itself
@@ -175,7 +176,7 @@ export default function App() {
       }}>
         {gameStarted?<Moves moveList={moveList} />:''}
         {gameStarted?<Premover handleMove={handleMove} currentPlayer={currentPlayer} />:''}
-        <GameAutomation setUsername={setUsername} />
+        <GameAutomation setUsername={setUsername} setGameId={setGameId} gameId={gameId} />
         {(username==='')?(()=>{return ((gameStarted)?(<Board depth={dimension} row={0} column={0} handleMove={handleMove} treeNode={boardTree} winDepth={winDepth} previousMove={previousMove} dimension={dimension} />):(<div><h1>waiting for another player...</h1></div>))}):<div/>}
       </div>
     </div>

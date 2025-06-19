@@ -4,8 +4,8 @@ import {debugLog} from "./App";
 export function GameAutomation(props) {
     const hostName = "localhost";
     const port = 3030;
-    const gameID = 0;
-    const createGame = async () => {
+
+    const createGame = useCallback(async() => {
         const username = prompt("Username:");
         props.setUsername(username);
         const path = "games";
@@ -16,24 +16,30 @@ export function GameAutomation(props) {
             
             }
         });
-        gameID = response.gameID;
-        joinGame(gameID);
-        console.log("Got response ", response.gameID);
-    };
-    const joinGame = async () => {
+        const jsonResponse = await response.json();
+        props.setGameId(jsonResponse.gameID);
+        //joinGame(gameID);
+        console.log("Got response ", jsonResponse.gameID);
+    }, [props]);
+
+    const joinGame = useCallback(async () => {
         const username = prompt("Username:");
         props.setUsername(username);
-        const path = `games/${gameID}`;
+        const path = `game/${props.gameId}`;
         const url = `http://${hostName}:${port}/${path}`;
         const response = await fetch(url, {
             method: "PUT",
-            body: {
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
                 action: 'join',
                 playerName: 'me'
-            }
+            })
         });
         console.log("Got response ", response);
-    };
+    }, [props]);
+
     return (
         <div>
             <button onClick={createGame}>
