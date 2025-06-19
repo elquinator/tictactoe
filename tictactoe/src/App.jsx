@@ -4,6 +4,12 @@ import Moves,{Premover,GameAutomation} from './Moves';
 import React, { cloneElement, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import _ from "lodash";
 
+const hostName = "localhost";
+const port = 3030;
+const gameID=481412
+const path = `games/${gameID}`;
+const url = `http://${hostName}:${port}/${path}`;
+
 const NS_DEBUG_NAMES = {
     "MOVE_RECORDER": false,
     "MOVE_CLICK": false,
@@ -106,6 +112,16 @@ export default function App() {
   const [boardTree, setBoardTree] = useState(new BoardTree(null,dimension,0,0));
   const [previousMove, setPreviousMove] = useState([]);
   const [winDepth, setWinDepth] = useState(0);
+  const [gameStarted, setGameStarted] = useState(false);
+  const [username, setUsername] = useState('');
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      //get status on game start
+      const isGameStarted = (username!=='')?(async () => {await fetch(url, { method: "GET" }).gameStarted}):'';
+    setGameStarted(isGameStarted);
+    }, 5000);
+  })
 
   const handleMove = useCallback((event,treeNode,row,column) => {
     //treeNode is always the parent board of the move played, not the move itself
@@ -157,10 +173,10 @@ export default function App() {
       <div style={{
         display:"flex"
       }}>
-        <Moves moveList={moveList} />
-        <Premover handleMove={handleMove} currentPlayer={currentPlayer} />
-        <GameAutomation />
-        <Board depth={dimension} row={0} column={0} handleMove={handleMove} treeNode={boardTree} winDepth={winDepth} previousMove={previousMove} dimension={dimension} />
+        {gameStarted?<Moves moveList={moveList} />:''}
+        {gameStarted?<Premover handleMove={handleMove} currentPlayer={currentPlayer} />:''}
+        <GameAutomation setUsername={setUsername} />
+        {(username==='')?(()=>{return ((gameStarted)?(<Board depth={dimension} row={0} column={0} handleMove={handleMove} treeNode={boardTree} winDepth={winDepth} previousMove={previousMove} dimension={dimension} />):(<div><h1>waiting for another player...</h1></div>))}):<div/>}
       </div>
     </div>
   );

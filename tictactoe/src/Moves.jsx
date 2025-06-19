@@ -4,7 +4,10 @@ import {debugLog} from "./App";
 export function GameAutomation(props) {
     const hostName = "localhost";
     const port = 3030;
+    const gameID = 0;
     const createGame = async () => {
+        const username = prompt("Username:");
+        props.setUsername(username);
         const path = "games";
         const url = `http://${hostName}:${port}/${path}`;
         const response = await fetch(url, {
@@ -13,12 +16,31 @@ export function GameAutomation(props) {
             
             }
         });
+        gameID = response.gameID;
+        joinGame(gameID);
+        console.log("Got response ", response.gameID);
+    };
+    const joinGame = async () => {
+        const username = prompt("Username:");
+        props.setUsername(username);
+        const path = `games/${gameID}`;
+        const url = `http://${hostName}:${port}/${path}`;
+        const response = await fetch(url, {
+            method: "PUT",
+            body: {
+                action: 'join',
+                playerName: 'me'
+            }
+        });
         console.log("Got response ", response);
     };
     return (
         <div>
             <button onClick={createGame}>
                 create game
+            </button>
+            <button onClick={joinGame}>
+                join game
             </button>
         </div>
     );
