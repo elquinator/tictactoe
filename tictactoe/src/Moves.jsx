@@ -90,15 +90,6 @@ export function GameAutomation(props) {
 }
 
 export function Premover(props) {
-    const premove = useCallback((coordinates) => {
-        // Create a fake DOM element if the real one doesn't exist
-        const cellId = `cell-${coordinates.join('-')}`;
-        let targetElement = document.getElementById(cellId);
-        // Log the move for debugging
-        debugLog("MOVER_DEBUG", `Executing move: ${coordinates.join(',')} with player: ${props.currentPlayer || 'unknown'}`);
-        targetElement.click();
-    }, [props]);
-
     const premover = useCallback((moveIndex) => {
         // we're going to fake out event and then find the right treemove by coordinate
         // must assume board size since this is NOT a generic debugging tool: depth = 3
@@ -319,10 +310,10 @@ export function Premover(props) {
         // Execute moves with a delay between them
         moves[moveIndex].forEach((move, index) => {
             setTimeout(() => {
-                premove(move);
+                props.move(move);
             }, index * 300); // 500ms delay between moves
         });
-    }, [premove])
+    }, [props.move])
 
     return (
         <div style={{
