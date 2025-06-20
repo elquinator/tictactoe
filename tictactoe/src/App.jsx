@@ -113,16 +113,6 @@ export default function App() {
   const [username, setUsername] = useState('');
   const [gameId, setGameId] = useState('');
 
-    const move = useCallback((coordinates) => {
-      // Create a fake DOM element if the real one doesn't exist
-      const cellId = `cell-${coordinates.join('-')}`;
-      console.log(coordinates);
-      let targetElement = document.getElementById(cellId);
-      // Log the move for debugging
-      //debugLog("MOVER_DEBUG", `Executing move: ${coordinates.join(',')} with player: ${currentPlayer || 'unknown'}`);
-      targetElement.click();
-    }, []);
-
   useEffect(() => {
     let gameStartedFlag=false;
     const interval = setInterval(async () => {
@@ -148,7 +138,9 @@ export default function App() {
         try {
           console.log(moveList)
           console.log(moveList[moveList.length - 1]);
-          move(moveList[moveList.length-1])
+          const cellId = `cell-${coordinates.join('-')}`;
+          let targetElement = document.getElementById(cellId);
+          targetElement.click();
         }
         catch (error) {
           console.log("move failed to move: ", error);
@@ -179,7 +171,7 @@ export default function App() {
       },
       body: JSON.stringify({
         action: 'move',
-        move: treeNode.getFullRoute([row, column])
+        move: [treeNode.getFullRoute([row, column])]
       })
     })
 
@@ -219,7 +211,7 @@ export default function App() {
         display:"flex"
       }}>
         {gameStarted?<Moves moveList={moveList} />:''}
-        {gameStarted ? <Premover move={move} handleMove={handleMove} currentPlayer={currentPlayer} />:''}
+        {gameStarted?<Premover handleMove={handleMove} currentPlayer={currentPlayer} />:''}
         <GameAutomation setUsername={setUsername} setGameId={setGameId} gameId={gameId} />
         {username !== '' && gameStarted && (
           <Board depth={dimension} row={0} column={0} handleMove={handleMove} treeNode={boardTree} winDepth={winDepth} previousMove={previousMove} dimension={dimension} />
