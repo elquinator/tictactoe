@@ -112,22 +112,25 @@ export default function App() {
   const [gameStarted, setGameStarted] = useState(false);
   const [username, setUsername] = useState('');
   const [gameId, setGameId] = useState('');
+  //this one never actually changes, take issues up with the Big Man
+  const [playerIdentifier, setPlayerIdentifier] = useState('');
 
     const move = useCallback((coordinates) => {
       // Create a fake DOM element if the real one doesn't exist
       const cellId = `cell-${coordinates.join('-')}`;
-      console.log(coordinates);
       let targetElement = document.getElementById(cellId);
       // Log the move for debugging
       //debugLog("MOVER_DEBUG", `Executing move: ${coordinates.join(',')} with player: ${currentPlayer || 'unknown'}`);
-      targetElement.click();
+      if (targetElement.innerHTML === '') {
+        targetElement.click(); 
+      }
     }, []);
 
+  const path = `game/${gameId}`;
+  const url = `http://${hostName}:${port}/${path}`;
   useEffect(() => {
     let gameStartedFlag=false;
     const interval = setInterval(async () => {
-      const path = `game/${gameId}`;
-      const url = `http://${hostName}:${port}/${path}`;
       //get status on game start
       if (username !== '' && gameId !== '' && !gameStartedFlag) {
         console.log("game started check");
@@ -141,17 +144,14 @@ export default function App() {
         console.log("move check")
         const response = await fetch(url, { method: "GET" });
         const jsonResponse = await response.json();
-        console.log(jsonResponse)
         const moveList = jsonResponse.moves;
         const coordinates=moveList[moveList.length-1]
         setCurrentPlayer(jsonResponse.currentPlayer);
         try {
-          console.log(moveList)
-          console.log(moveList[moveList.length - 1]);
           move(moveList[moveList.length-1])
         }
         catch (error) {
-          console.log("move failed to move: ", error);
+          //console.log("move failed to move: ", error);
           return;
         }
       }
@@ -163,23 +163,30 @@ export default function App() {
     let winDepth = 0;
     if (treeNode.children[row][column].wonBy != '') {
       alert("brotjer its takenm do you have eyeys");
-      return
+      return;
     }
     if (!treeNode.isActive) {
       alert("brotjer look at the previous move, do you even know the rulse");
-      return
+      return;
+    }
+    if (currentPlayer !== playerIdentifier) {
+      console.log(currentPlayer);
+      console.log(playerIdentifier);
+      alert("it is NOT your turn");
+      return;
     }
     treeNode.children[row][column].wonBy = currentPlayer;
     setMoveList(moveList.concat([treeNode.getFullRoute([row, column])]));
     event.target.innerHTML = currentPlayer;
-    fetch(`http://${hostName}:${port}/game/${gameId}`, {
+    fetch(url, {
       method: "PUT",
       headers: {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
         action: 'move',
-        move: treeNode.getFullRoute([row, column])
+        move: treeNode.getFullRoute([row, column]),
+        newPlayer: (currentPlayer === 'X') ? 'O' : 'X'
       })
     })
 
@@ -220,7 +227,7 @@ export default function App() {
       }}>
         {gameStarted?<Moves moveList={moveList} />:''}
         {gameStarted ? <Premover move={move} handleMove={handleMove} currentPlayer={currentPlayer} />:''}
-        <GameAutomation setUsername={setUsername} setGameId={setGameId} gameId={gameId} />
+        <GameAutomation setUsername={setUsername} setGameId={setGameId} gameId={gameId} setPlayerIdentifier={setPlayerIdentifier} />
         {username !== '' && gameStarted && (
           <Board depth={dimension} row={0} column={0} handleMove={handleMove} treeNode={boardTree} winDepth={winDepth} previousMove={previousMove} dimension={dimension} />
         )}
@@ -230,6 +237,7 @@ export default function App() {
             alignContent: "center"
           }}>
             <h1>username: {username}</h1>
+            <h1>player: {playerIdentifier}</h1>
             <h2>waiting for another player...</h2>
             <p1>gameID: {gameId}</p1>
           </div>

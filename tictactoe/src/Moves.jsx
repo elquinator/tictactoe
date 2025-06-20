@@ -43,7 +43,10 @@ export function GameAutomation(props) {
                 playerName: 'me'
             })
         });
-        console.log("Got response ", response);
+        const jsonResponse = await response.json();
+        console.log("Got response ", jsonResponse);
+        console.log(jsonResponse.playerIdentifier)
+        props.setPlayerIdentifier(jsonResponse.playerIdentifier);
     }, [props]);
 
     return (
