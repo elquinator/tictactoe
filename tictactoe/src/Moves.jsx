@@ -1,5 +1,6 @@
 import {useCallback} from "react";
-import {debugLog} from "./App";
+import { debugLog } from "./App";
+import logo from "./tictactoelogo.png"
 
 export function GameAutomation(props) {
     const hostName = window.location.host.split(':')[0];
@@ -46,27 +47,49 @@ export function GameAutomation(props) {
     }, [props]);
 
     return (
-        <div>
-            <button onClick={createGame}>
-                create game
-            </button>
-            <button onClick={joinGame}>
-                join game
-            </button>
+        <div style={{
+            width: "100%",
+            display: "block"
+        }}>
+            <div style={{
+                width: "100%",
+                display: "block"
+            }}>
+                <img src={logo} style={{
+                    scale: "50%",
+                    width: "100%"
+                }} />
+                <h1 style={{
+                    marginTop:"0px"
+                }}>
+                    play now!
+                </h1>
+            </div>
+            <div style={{
+                marginTop: "300px",
+                width:"100%",
+                alignContent: "center",
+              }}>
+                <button onClick={createGame} style={{
+                    width: "250px",
+                    height: "50px",
+                    fontSize: "20px"
+                }}>
+                    create game
+                </button>
+                <button onClick={joinGame} style={{
+                    width: "250px",
+                    height: "50px",
+                    fontSize: "20px"
+                }}>
+                    join game
+                </button>
+            </div>
         </div>
     );
 }
 
 export function Premover(props) {
-    const premove = useCallback((coordinates) => {
-        // Create a fake DOM element if the real one doesn't exist
-        const cellId = `cell-${coordinates.join('-')}`;
-        let targetElement = document.getElementById(cellId);
-        // Log the move for debugging
-        debugLog("MOVER_DEBUG", `Executing move: ${coordinates.join(',')} with player: ${props.currentPlayer || 'unknown'}`);
-        targetElement.click();
-    }, [props]);
-
     const premover = useCallback((moveIndex) => {
         // we're going to fake out event and then find the right treemove by coordinate
         // must assume board size since this is NOT a generic debugging tool: depth = 3
@@ -277,13 +300,20 @@ export function Premover(props) {
                 [2, 2, 2, 2, 0, 0]
             ],
         ];
+        // store coords you want to move manually in manual and send them in with premover
+        //console.log(props.manual)
+        //if (props.manual !== '') {
+        //    console.log("attempting premove: ",props.manual)
+        //    premove(props.manual)
+        //    return;
+        //}
         // Execute moves with a delay between them
         moves[moveIndex].forEach((move, index) => {
             setTimeout(() => {
-                premove(move);
+                props.move(move);
             }, index * 300); // 500ms delay between moves
         });
-    }, [premove])
+    }, [props.move])
 
     return (
         <div style={{

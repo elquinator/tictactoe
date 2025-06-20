@@ -113,24 +113,55 @@ export default function App() {
   const [username, setUsername] = useState('');
   const [gameId, setGameId] = useState('');
 
+    const move = useCallback((coordinates) => {
+      // Create a fake DOM element if the real one doesn't exist
+      const cellId = `cell-${coordinates.join('-')}`;
+      console.log(coordinates);
+      let targetElement = document.getElementById(cellId);
+      // Log the move for debugging
+      //debugLog("MOVER_DEBUG", `Executing move: ${coordinates.join(',')} with player: ${currentPlayer || 'unknown'}`);
+      targetElement.click();
+    }, []);
+
   useEffect(() => {
+    let gameStartedFlag=false;
     const interval = setInterval(async () => {
+      const path = `game/${gameId}`;
+      const url = `http://${hostName}:${port}/${path}`;
       //get status on game start
-      if (username!=='' && gameId!=='') {
-        const path = `game/${gameId}`;
-        const url = `http://${hostName}:${port}/${path}`;
+      if (username !== '' && gameId !== '' && !gameStartedFlag) {
+        console.log("game started check");
         const response = await fetch(url, { method: "GET" })
         const jsonResponse = await response.json();
-        console.log(jsonResponse);
-        setGameStarted(jsonResponse.gameStarted);
-      };
-      }, 5000);
+        gameStartedFlag = jsonResponse.gameStarted;
+        setGameStarted(gameStartedFlag);
+      }
+      //set necessary info for game after start
+      else if (gameStartedFlag) {
+        console.log("move check")
+        const response = await fetch(url, { method: "GET" });
+        const jsonResponse = await response.json();
+        console.log(jsonResponse)
+        const moveList = jsonResponse.moves;
+        const coordinates=moveList[moveList.length-1]
+        setCurrentPlayer(jsonResponse.currentPlayer);
+        try {
+          console.log(moveList)
+          console.log(moveList[moveList.length - 1]);
+          move(moveList[moveList.length-1])
+        }
+        catch (error) {
+          console.log("move failed to move: ", error);
+          return;
+        }
+      }
+      }, 1000);
   }, [username, gameId, setGameStarted]);
 
-  const handleMove = useCallback((event,treeNode,row,column) => {
+  const handleMove = useCallback((event, treeNode, row, column) => {
     //treeNode is always the parent board of the move played, not the move itself
-    let winDepth=0;
-    if (treeNode.children[row][column].wonBy!='') {
+    let winDepth = 0;
+    if (treeNode.children[row][column].wonBy != '') {
       alert("brotjer its takenm do you have eyeys");
       return
     }
@@ -138,9 +169,19 @@ export default function App() {
       alert("brotjer look at the previous move, do you even know the rulse");
       return
     }
-    treeNode.children[row][column].wonBy=currentPlayer;
-    setMoveList(moveList.concat([treeNode.getFullRoute([row,column])]));
-    event.target.innerHTML=currentPlayer;
+    treeNode.children[row][column].wonBy = currentPlayer;
+    setMoveList(moveList.concat([treeNode.getFullRoute([row, column])]));
+    event.target.innerHTML = currentPlayer;
+    fetch(`http://${hostName}:${port}/game/${gameId}`, {
+      method: "PUT",
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        action: 'move',
+        move: treeNode.getFullRoute([row, column])
+      })
+    })
 
     let currentBoard=treeNode;
     let coords=[];
@@ -178,7 +219,7 @@ export default function App() {
         display:"flex"
       }}>
         {gameStarted?<Moves moveList={moveList} />:''}
-        {gameStarted?<Premover handleMove={handleMove} currentPlayer={currentPlayer} />:''}
+        {gameStarted ? <Premover move={move} handleMove={handleMove} currentPlayer={currentPlayer} />:''}
         <GameAutomation setUsername={setUsername} setGameId={setGameId} gameId={gameId} />
         {username !== '' && gameStarted && (
           <Board depth={dimension} row={0} column={0} handleMove={handleMove} treeNode={boardTree} winDepth={winDepth} previousMove={previousMove} dimension={dimension} />
