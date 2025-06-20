@@ -169,12 +169,6 @@ export default function App() {
       alert("brotjer look at the previous move, do you even know the rulse");
       return;
     }
-    if (currentPlayer !== playerIdentifier) {
-      console.log(currentPlayer);
-      console.log(playerIdentifier);
-      alert("it is NOT your turn");
-      return;
-    }
     treeNode.children[row][column].wonBy = currentPlayer;
     setMoveList(moveList.concat([treeNode.getFullRoute([row, column])]));
     event.target.innerHTML = currentPlayer;
@@ -214,7 +208,7 @@ export default function App() {
   },[currentPlayer, boardTree, previousMove, players, moveList]);
 
   return (
-    <div className="App">
+    <div className="App" style={{position: "relative"}}>
       <div style={{
             backgroundColor: "#ddd"
         }}>
@@ -225,9 +219,9 @@ export default function App() {
       <div style={{
         display:"flex"
       }}>
-        {gameStarted?<Moves moveList={moveList} />:''}
+        {gameStarted ? <Moves moveList={moveList} />:''}
         {gameStarted ? <Premover move={move} handleMove={handleMove} currentPlayer={currentPlayer} />:''}
-        <GameAutomation setUsername={setUsername} setGameId={setGameId} gameId={gameId} setPlayerIdentifier={setPlayerIdentifier} />
+        {username === '' ? <GameAutomation setUsername={setUsername} setGameId={setGameId} gameId={gameId} setPlayerIdentifier={setPlayerIdentifier} />:''}
         {username !== '' && gameStarted && (
           <Board depth={dimension} row={0} column={0} handleMove={handleMove} treeNode={boardTree} winDepth={winDepth} previousMove={previousMove} dimension={dimension} />
         )}
@@ -243,6 +237,7 @@ export default function App() {
           </div>
         )}
       </div>
+      {((currentPlayer != playerIdentifier) && gameStarted) ? <div style={{ display: 'block', position: "absolute", top: 0, left: 0, height: "100%", width: "100%" }} /> : ''}
     </div>
   );
 }

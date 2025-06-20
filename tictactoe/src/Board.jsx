@@ -11,7 +11,7 @@ export default function Board(props) {
         <div id={"board-" + props.depth + "-" + props.row + "-" + props.column} style={{
             padding: `${(props.depth+1)*25}px`,
             border: boardActiveFlag? "1px solid green":"",
-            backgroundColor: boardActiveFlag? "green":"#ddd",
+            backgroundColor: boardActiveFlag? "green":"#ddd"
         }}>
             <table>
                 {rows.map((row)=>(
