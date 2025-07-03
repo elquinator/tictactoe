@@ -2,6 +2,7 @@ import './App.css';
 import Board from './Board';
 import Moves,{Premover,GameAutomation} from './Moves';
 import React, { cloneElement, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { GameInfo } from './GameInfo';
 import _ from "lodash";
 
 const hostName = window.location.host.split(':')[0];
@@ -114,6 +115,7 @@ export default function App() {
   const [gameId, setGameId] = useState('');
   //this one never actually changes, take issues up with the Big Man
   const [playerIdentifier, setPlayerIdentifier] = useState('');
+  const [playerNames, setPlayerNames] = useState([]);
 
     const move = useCallback((coordinates) => {
       // Create a fake DOM element if the real one doesn't exist
@@ -136,6 +138,7 @@ export default function App() {
         console.log("game started check");
         const response = await fetch(url, { method: "GET" })
         const jsonResponse = await response.json();
+        setPlayerNames([jsonResponse.playerX, jsonResponse.playerO]);
         gameStartedFlag = jsonResponse.gameStarted;
         setGameStarted(gameStartedFlag);
       }
@@ -208,22 +211,25 @@ export default function App() {
   },[currentPlayer, boardTree, previousMove, players, moveList]);
 
   return (
-    <div className="App" style={{position: "relative"}}>
+    <div className="App" style={{ position: "relative", fontFamily: "monospace" }}>
       <div style={{
-            backgroundColor: "#ddd"
+          backgroundColor: "#ddd"
         }}>
         {gameStarted&&(<h1>
-          Player {currentPlayer} turn
+          {playerNames[players.indexOf(currentPlayer)]} turn ({playerIdentifier===currentPlayer?"make a move":"waiting for move from other guy"})
         </h1>)}
       </div>
       <div style={{
         display:"flex"
       }}>
         {gameStarted ? <Moves moveList={moveList} />:''}
-        {gameStarted ? <Premover move={move} handleMove={handleMove} currentPlayer={currentPlayer} />:''}
-        {username === '' ? <GameAutomation setUsername={setUsername} setGameId={setGameId} gameId={gameId} setPlayerIdentifier={setPlayerIdentifier} />:''}
+        {false&&gameStarted ? <Premover move={move} handleMove={handleMove} currentPlayer={currentPlayer} />:''}
+        {username === '' ? <GameAutomation setUsername={setUsername} setGameId={setGameId} setPlayerIdentifier={setPlayerIdentifier} />:''}
         {username !== '' && gameStarted && (
-          <Board depth={dimension} row={0} column={0} handleMove={handleMove} treeNode={boardTree} winDepth={winDepth} previousMove={previousMove} dimension={dimension} />
+          <>
+            <GameInfo player1={playerNames[0]} player2={playerNames[1]} />
+            <Board depth={dimension} row={0} column={0} handleMove={handleMove} treeNode={boardTree} winDepth={winDepth} previousMove={previousMove} dimension={dimension} />
+          </>
         )}
         {username !== '' && !gameStarted && (
           <div style={{

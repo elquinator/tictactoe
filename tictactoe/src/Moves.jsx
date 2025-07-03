@@ -13,24 +13,18 @@ export function GameAutomation(props) {
         const url = `http://${hostName}:${port}/${path}`;
         const response = await fetch(url, {
             method: "POST",
-            body: {
-            
-            }
         });
         const jsonResponse = await response.json();
-        props.setGameId(jsonResponse.gameID);
-        //joinGame(gameID);
-        console.log("Got response ", jsonResponse.gameID);
+        const gameId = jsonResponse.gameID;
+        props.setGameId(gameId);
+        joinGame(gameId);
     }, [props]);
 
-    const joinGame = useCallback(async () => {
-        let gameId = props.gameId;
-        if (props.gameId === '') {
+    const joinGame = useCallback(async (gameId) => {
+        if (typeof(gameId)!=="string") {
             gameId = prompt("gameID of game youre trying to join:");
-            props.setGameId(gameId);
         }
         const username = prompt("Username:");
-        props.setUsername(username);
         const path = `game/${gameId}`;
         const url = `http://${hostName}:${port}/${path}`;
         const response = await fetch(url, {
@@ -40,13 +34,19 @@ export function GameAutomation(props) {
             },
             body: JSON.stringify({
                 action: 'join',
-                playerName: 'me'
+                playerName: username
             })
         });
         const jsonResponse = await response.json();
         console.log("Got response ", jsonResponse);
         console.log(jsonResponse.playerIdentifier)
-        props.setPlayerIdentifier(jsonResponse.playerIdentifier);
+        if (jsonResponse.error) {
+            alert("Game does not exist vro.");
+        } else {
+            props.setPlayerIdentifier(jsonResponse.playerIdentifier);
+            props.setUsername(username);
+            props.setGameId(gameId);
+        }
     }, [props]);
 
     return (
@@ -324,7 +324,6 @@ export function Premover(props) {
             paddingRight: "20px",
             paddingLeft: "10px",
             backgroundColor: "#222222",
-            fontFamily: "monospace",
             width: "70px"
         }}>
             <h2 style={{color: "white"}}>Premov</h2>

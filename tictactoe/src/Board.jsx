@@ -16,7 +16,7 @@ export default function Board(props) {
             <table>
                 {rows.map((row)=>(
                     <tr>
-                        {props.depth==props.dimension?<h1 style={{color:"rgb(134, 0, 0)"}}>{letters[row]}</h1>:''}
+                        {props.depth == props.dimension ? <h1 style={{ display: "table-cell", height:"100%", verticalAlign: "middle", color:"rgb(134, 0, 0)"}}>{letters[row]}</h1>:''}
                         {columns.map((column)=>(
                             <td id={"cell-" + "-" + props.depth + "-" + props.row + "-" + props.column + "-" + row + "-" + column} style={{
                                 borderBottom: row<2? `${props.depth*3+1}px solid black`:'',
@@ -39,7 +39,7 @@ export default function Board(props) {
                                     }}>
                                     </button>
                                 )}
-                                <h1 style={{color:"rgb(134, 0, 0)"}}>{row==2&&props.depth==props.dimension?(column+1):''}</h1>
+                                {row == 2 && props.depth == props.dimension ? <h1 style={{color:"rgb(134, 0, 0)"}}>{column+1}</h1> : ''}
                             </td>
                         ))}
                     </tr>
