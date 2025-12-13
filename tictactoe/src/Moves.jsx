@@ -1,7 +1,6 @@
 import {useCallback} from "react";
 import { debugLog } from "./App";
 import logo from "./tictactoelogo.png"
-import { identity } from "lodash";
 
 export function GameAutomation(props) {
     const hostName = window.location.host.split(':')[0];
@@ -38,45 +37,13 @@ export function GameAutomation(props) {
                 playerName: username
             })
         });
-        let jsonResponse = await response.json();
-        let identifier = jsonResponse.playerIdentifier;
+        const jsonResponse = await response.json();
         console.log("Got response ", jsonResponse);
-        //joining existing game | 240144 | 498289 | 097878 | 
-        if (jsonResponse.response === "already started") {
-            console.log("joining existing game");
-            const response = await fetch(url, {
-                method: "GET",
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-            });
-            const gameData = await response.json()
-            const gameMoves=gameData.moves;
-            console.log(gameMoves)
-            gameMoves.forEach((move, index) => {
-                console.log("ss",move)
-                //try {
-                //    setTimeout(() => {
-                //        props.move(move);
-                //    }, index * 300); // 500ms delay between moves
-                //} catch {console.log("error moving: ",move)}
-            });
-            jsonResponse=gameData;
-            console.log("setting identifier");
-            identifier=(jsonResponse.playerX===username?'X':'O');
-        }
-        else if (jsonResponse.response === "game is full") {
-            console.log("full game")
-            alert("game is full");
-            return;
-        }
-        console.log(jsonResponse.playerIdentifier);
+        console.log(jsonResponse.playerIdentifier)
         if (jsonResponse.error) {
             alert("Game does not exist vro.");
-        } 
-        else {
-            console.log(identifier,username,gameId)
-            props.setPlayerIdentifier(identifier);
+        } else {
+            props.setPlayerIdentifier(jsonResponse.playerIdentifier);
             props.setUsername(username);
             props.setGameId(gameId);
         }
@@ -336,7 +303,6 @@ export function Premover(props) {
                 [2, 2, 2, 2, 0, 0]
             ],
         ];
-        //customMove will always have index 6
         // store coords you want to move manually in manual and send them in with premover
         //console.log(props.manual)
         //if (props.manual !== '') {
