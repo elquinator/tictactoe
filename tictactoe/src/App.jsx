@@ -91,6 +91,14 @@ function checkWin(toCheck) {
   return false;
 }
 
+const getTreeNodeForCoords = (boardTreeRoot, coordinates) => {
+    if (boardTreeRoot.children) {
+        return getTreeNodeForCoords(boardTreeRoot.children[coordinates[0]][coordinates[1]], coordinates.slice(2));
+    } else {
+        return boardTreeRoot;
+    }
+};
+
 function calculateShift(previousMove) {
   const route=previousMove[0].getFullRoute([previousMove[1],previousMove[2]]);
   const winDepth=previousMove[3];
@@ -123,9 +131,15 @@ export default function App() {
       let targetElement = document.getElementById(cellId);
       // Log the move for debugging
       //debugLog("MOVER_DEBUG", `Executing move: ${coordinates.join(',')} with player: ${currentPlayer || 'unknown'}`);
-      if (targetElement.innerHTML === '') {
-        targetElement.click(); 
-      }
+      // if (targetElement.innerHTML === '') {
+      //   targetElement.click();
+      // }
+      console.log("move: ", coordinates);
+      const treeNode = getTreeNodeForCoords(boardTree, coordinates).parent; // get the board the move was played on
+      console.log("treeNode: ", treeNode);
+      const pseudoEvent = { target: targetElement };
+      console.log("pseudoEvent: ", pseudoEvent);
+      handleMoveImpl(pseudoEvent, treeNode, coordinates[coordinates.length - 2], coordinates[coordinates.length - 1]);
     }, []);
 
   const path = `game/${gameId}`;
@@ -168,7 +182,20 @@ export default function App() {
       }, 1000);
   }, [username, gameId, setGameStarted]);
 
+  const itIsOurMove = useCallback(() => {
+      console.log("itIsOurMove: ", currentPlayer, moveList, moveList.length % 2 === 0);
+      return currentPlayer === "X" && moveList.length % 2 === 0 || currentPlayer === "O" && moveList.length % 2 !== 0;
+  }, [currentPlayer, moveList]);
+
   const handleMove = useCallback((event, treeNode, row, column) => {
+      if (itIsOurMove()) {
+          handleMoveImpl(event, treeNode, row, column);
+      } else {
+          alert("it's not your turn");
+      }
+  });
+
+  const handleMoveImpl = useCallback((event, treeNode, row, column) => {
     //treeNode is always the parent board of the move played, not the move itself
     let winDepth = 0;
     if (treeNode.children[row][column].wonBy != '') {
@@ -250,7 +277,6 @@ export default function App() {
           </div>
         )}
       </div>
-      {((currentPlayer != playerIdentifier) && gameStarted) ? <div style={{ display: 'block', position: "absolute", top: 0, left: 0, height: "100%", width: "100%" }} /> : ''}
     </div>
   );
 }
