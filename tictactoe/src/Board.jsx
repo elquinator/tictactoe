@@ -1,4 +1,9 @@
+import { useContext } from "react";
+import { StateContext } from "./App";
+
 export default function Board(props) {
+    const { dimension, winDepth, previousMove } = useContext(StateContext)
+    console.log("THISSS "+dimension)
     const rows=[0,1,2];
     const columns=[0,1,2];
     const letters=['A','B','C']
@@ -16,7 +21,7 @@ export default function Board(props) {
             <table>
                 {rows.map((row)=>(
                     <tr>
-                        {props.depth == props.dimension ? <h1 style={{ display: "table-cell", height:"100%", verticalAlign: "middle", color:"rgb(134, 0, 0)"}}>{letters[row]}</h1>:''}
+                        {props.depth == dimension ? <h1 style={{ display: "table-cell", height:"100%", verticalAlign: "middle", color:"rgb(134, 0, 0)"}}>{letters[row]}</h1>:''}
                         {columns.map((column)=>(
                             <td id={"cell-" + "-" + props.depth + "-" + props.row + "-" + props.column + "-" + row + "-" + column} style={{
                                 borderBottom: row<2? `${props.depth*3+1}px solid black`:'',
@@ -24,7 +29,7 @@ export default function Board(props) {
                              }}>
                                 {props.depth>1 && (
                                     <>
-                                        <Board depth={props.depth-1} row={row} column={column} handleMove={props.handleMove} treeNode={props.treeNode.children[row][column]} activeBoard={props.activeBoard} winDepth={props.winDepth} previousMove={props.previousMove} dimension={props.dimension} />
+                                        <Board depth={props.depth-1} row={row} column={column} handleMove={props.handleMove} treeNode={props.treeNode.children[row][column]} winDepth={winDepth} previousMove={previousMove} dimension={dimension} />
                                         {//true && (
                                          //   <div style={{position: "absolute"}}>
                                          //       <h>{columns[column]}</h>
@@ -47,7 +52,7 @@ export default function Board(props) {
                                     }}>
                                     </button>
                                 )}
-                                {row == 2 && props.depth == props.dimension ? <h1 style={{color:"rgb(134, 0, 0)"}}>{column+1}</h1> : ''}
+                                {row == 2 && props.depth == dimension ? <h1 style={{color:"rgb(134, 0, 0)"}}>{column+1}</h1> : ''}
                             </td>
                         ))}
                     </tr>

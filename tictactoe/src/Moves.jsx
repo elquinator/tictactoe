@@ -1,33 +1,30 @@
-import {useCallback} from "react";
-import { debugLog } from "./App";
+import {useCallback, useContext} from "react";
+import { debugLog, StateContext } from "./App";
 import logo from "./tictactoelogo.png"
+import { URL } from "./constants";
 
 export function GameAutomation(props) {
-    const hostName = window.location.host.split(':')[0];
-    const port = 3030;
+    const {setGameId, setPlayerIdentifier, setUsername} = useContext(StateContext)
 
     const createGame = useCallback(async() => {
         //const username = prompt("Username:");
-        //props.setUsername(username);
-        const path = "games";
-        const url = `http://${hostName}:${port}/${path}`;
-        const response = await fetch(url, {
+        //gameState.setUsername(username);
+        const response = await fetch(URL, {
             method: "POST",
         });
         const jsonResponse = await response.json();
         const gameId = jsonResponse.gameID;
-        props.setGameId(gameId);
+        setGameId(gameId);
         joinGame(gameId);
-    }, [props]);
+    }, []);
 
     const joinGame = useCallback(async (gameId) => {
         if (typeof(gameId)!=="string") {
             gameId = prompt("gameID of game youre trying to join:");
+            setGameId(gameId)
         }
         const username = prompt("Username:");
-        const path = `game/${gameId}`;
-        const url = `http://${hostName}:${port}/${path}`;
-        const response = await fetch(url, {
+        const response = await fetch(URL+'/'+gameId, {
             method: "PUT",
             headers: {
                 'Content-Type': 'application/json',
@@ -43,11 +40,11 @@ export function GameAutomation(props) {
         if (jsonResponse.error) {
             alert("Game does not exist vro.");
         } else {
-            props.setPlayerIdentifier(jsonResponse.playerIdentifier);
-            props.setUsername(username);
-            props.setGameId(gameId);
+            setPlayerIdentifier(jsonResponse.playerIdentifier);
+            setUsername(username);
+            setGameId(gameId);
         }
-    }, [props]);
+    }, []);
 
     return (
         <div style={{
@@ -304,10 +301,10 @@ export function Premover(props) {
             ],
         ];
         // store coords you want to move manually in manual and send them in with premover
-        //console.log(props.manual)
-        //if (props.manual !== '') {
-        //    console.log("attempting premove: ",props.manual)
-        //    premove(props.manual)
+        //console.log(gameState.manual)
+        //if (gameState.manual !== '') {
+        //    console.log("attempting premove: ",gameState.manual)
+        //    premove(gameState.manual)
         //    return;
         //}
         // Execute moves with a delay between them
@@ -337,7 +334,8 @@ export function Premover(props) {
         </div>
     )}
 
-export default function Moves(props) {
+export default function Moves() {
+    const {moveList} = useContext(StateContext)
     const letters=['A','B','C']
     return (
         <div style={{
@@ -347,7 +345,7 @@ export default function Moves(props) {
             fontFamily:"monospace"
         }}>
             <ol>
-                {props.moveList.map((move) =>
+                {moveList.map((move) =>
                 <li key={move} style={{
                     color:"white"
                 }}>{move.map((coord,index) =>
