@@ -58,58 +58,6 @@ export class BoardTree {
   }
 }
 
-//export class State {
-//  constructor(moveList, currentPlayer, boardTree, previousMove, winDepth, gameStarted, username, gameId, playerIdentifier, playerNames) {
-//    this.moveList = moveList
-//    this.currentPlayer = currentPlayer
-//    this.boardTree = boardTree
-//    this.previousMove = previousMove
-//    this.winDepth = winDepth
-//    this.gameStarted = gameStarted
-//    this.username = username
-//    this.gameId = gameId
-//    this.playerIdentifier = playerIdentifier
-//    this.playerNames = playerNames
-//    this.path = `game/${this.gameId}`;
-//    this.url = `http://${hostName}:${port}/${this.path}`;
-//    }
-//    setPlayerNames(player1, player2) {
-//        this.playerNames = [player1, player2];
-//    }
-//    setGameStarted(flag) {
-//        this.gameStarted = flag;
-//    }
-//    setCurrentPlayer(player) {
-//        this.currentPlayer = player;
-//    }
-//    setMoveList(moveList) {
-//        this.moveList = moveList;
-//    }
-//    isOurMove() {
-//        return this.currentPlayer === "X" && this.moveList.length % 2 === 0 || this.currentPlayer === "O" && this.moveList.length % 2 !== 0;
-//    }
-//    setWinDepth(winDepth) {
-//        this.winDepth = winDepth;
-//    }
-//    setPreviousMove(previousMove) {
-//        this.previousMove = previousMove;
-//    }
-//    setBoardTree(boardTree) {
-//        this.boardTree = boardTree;
-//    }
-//    setUsername(username) {
-//        this.username = username;
-//    }
-//    setGameId(gameId) {
-//        this.gameId = gameId;
-//    }
-//    setPlayerIdentifier(Id) {
-//        this.playerIdentifier = Id;
-//    }
-//}
-
-
-
 export function checkWin(toCheck) {
   const winconditions = [[[0, 0], [0, 1], [0, 2]], [[1, 0], [1, 1], [1, 2]], [[2, 0], [2, 1], [2, 2]], [[0, 0], [1, 0], [2, 0]], [[0, 1], [1, 1], [2, 1]], [[0, 2], [1, 2], [2, 2]], [[0, 2], [1, 1], [2, 0]], [[0, 0], [1, 1], [2, 2]]]
   for (let i=0; i<winconditions.length; i++) {

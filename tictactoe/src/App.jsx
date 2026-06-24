@@ -14,9 +14,9 @@ export const StateContext = createContext({
 })
 
 export function Game() {
-  const {boardTree, url, gameId, username, setPlayerNames, setGameStarted, moveList, setCurrentPlayer, setMoveList, 
-    isOurMove, currentPlayer, setWinDepth, setPreviousMove, setBoardTree, previousMove, gameStarted, playerNames, playerIdentifier,
-    dimension, pathUrl }= useContext(StateContext)
+  const {boardTree, url, gameId, username, setPlayerNames, setGameStarted, moveList, setMoveList, 
+    currentPlayer, setWinDepth, setPreviousMove, setBoardTree, previousMove, gameStarted, playerNames, playerIdentifier,
+    dimension, pathUrl } = useContext(StateContext)
 
   const move = useCallback((coordinates) => {
     // Create a fake DOM element if the real one doesn't exist
@@ -49,23 +49,23 @@ export function Game() {
       }
       //set necessary info for game after start
       else if (gameStartedFlag) {
-        console.log("move check")
+        console.log(`move check, id: ${playerIdentifier}, current player: ${currentPlayer}`);
         const response = await fetch(pathUrl, { method: "GET" });
         const jsonResponse = await response.json();
         const respMoveList = jsonResponse.moves;
-        setCurrentPlayer(jsonResponse.currentPlayer);
         while (respMoveList.length > moveList.length) {
           try {
+            console.log("updating moves....")
             const coords = respMoveList[moveList.length];
             moveList.push(coords);
-            setMoveList(moveList);
+            setMoveList([...moveList]);
             console.log("moving: ", coords);
             setTimeout(() => {
                 move(coords)
               }, 300);
           }
           catch (error) {
-            //console.log("move failed to move: ", error);
+            console.log("move failed to move: ", error);
             return;
           }
         }
@@ -75,11 +75,13 @@ export function Game() {
 
 
   const handleMove = useCallback((event, treeNode, row, column) => {
-      if (isOurMove()) {
-          handleMoveImpl(event, treeNode, row, column);
-      } else {
-          alert("it's not your turn");
-      }
+    // if our turn (x on even, o on odd)
+    console.log(`id: ${playerIdentifier}, player: ${currentPlayer}, yknow ${moveList}`)
+    if (playerIdentifier == currentPlayer) {
+        handleMoveImpl(event, treeNode, row, column);
+    } else {
+        alert("it's not your turn");
+    }
   });
 
   const handleMoveImpl = useCallback((event, treeNode, row, column) => {
@@ -94,9 +96,13 @@ export function Game() {
       return;
     }
     //valid move
+    //movelist updating too early for current player to be correct, help
+    //also you can play two moves before the server updates becasue we wait for that now
+    console.log(`!!!! moves: ${moveList},  playter:    ${currentPlayer}`);
     treeNode.children[row][column].wonBy = currentPlayer;
-    setMoveList(moveList.concat([treeNode.getFullRoute([row, column])]));
+    //setMoveList(moveList.concat([treeNode.getFullRoute([row, column])]));
     event.target.innerHTML = currentPlayer;
+    console.log("this is the url: "+pathUrl+ "   this is game id "+gameId)
     fetch(pathUrl, {
       method: "PUT",
       headers: {
@@ -105,7 +111,6 @@ export function Game() {
       body: JSON.stringify({
         action: 'move',
         move: treeNode.getFullRoute([row, column]),
-        newPlayer: (currentPlayer === 'X') ? 'O' : 'X'
       })
     })
 
@@ -127,10 +132,9 @@ export function Game() {
     boardTree.setActiveStatus(calculateShift([treeNode,row,column,winDepth]))
 
     setWinDepth(winDepth);
-    setCurrentPlayer(currentPlayer==='X'?'O':'X');
     setPreviousMove([treeNode,row,column,winDepth]);
     setBoardTree(boardTree);
-  },[currentPlayer, boardTree, previousMove, PLAYERS, moveList]);
+  },[currentPlayer, boardTree, previousMove, PLAYERS, moveList, gameId]);
 
   return (
     <div className="App" style={{ position: "relative", fontFamily: "monospace" }}>
@@ -149,7 +153,7 @@ export function Game() {
         {username === '' ? <GameAutomation move={move} />:''}
         {username !== '' && gameStarted && (
           <>
-            <GameInfo player1={playerNames[0]} player2={playerNames[1]} />
+            <GameInfo/>
             <Board depth={dimension} row={0} column={0} handleMove={handleMove} treeNode={boardTree} />
           </>
         )}
@@ -171,7 +175,6 @@ export function Game() {
 
 export function StateProvider({ children }) {
   const [moveList, setMoveList] = useState([]);
-  const [currentPlayer, setCurrentPlayer] = useState(PLAYERS[0]);
   const [boardTree, setBoardTree] = useState(new BoardTree(null,DEFAULT_DIM,0,0));
   const [previousMove, setPreviousMove] = useState([]);
   const [winDepth, setWinDepth] = useState(0);
@@ -186,11 +189,14 @@ export function StateProvider({ children }) {
     console.log("$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$::gameide:"+gameId+'/'+URL)
     return URL+'/'+gameId
   }, [gameId]);
+  const currentPlayer = useMemo(() => {
+    return (PLAYERS[moveList.length%2])
+  }, [moveList])
 
   return (
     <StateContext.Provider value={{
       moveList, currentPlayer, boardTree, previousMove, winDepth, gameStarted, username, gameId, playerIdentifier, playerNames, dimension, pathUrl,
-      setMoveList, setCurrentPlayer, setBoardTree, setPreviousMove, setWinDepth, setGameStarted, setUsername, setGameId, setPlayerIdentifier, setPlayerNames, setDimension
+      setMoveList, setBoardTree, setPreviousMove, setWinDepth, setGameStarted, setUsername, setGameId, setPlayerIdentifier, setPlayerNames, setDimension
     }}>
       {children}
     </StateContext.Provider>

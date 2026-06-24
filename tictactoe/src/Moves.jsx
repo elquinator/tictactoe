@@ -14,14 +14,13 @@ export function GameAutomation(props) {
         });
         const jsonResponse = await response.json();
         const gameId = jsonResponse.gameID;
-        setGameId(gameId);
+        //setGameId(gameId);
         joinGame(gameId);
     }, []);
 
     const joinGame = useCallback(async (gameId) => {
         if (typeof(gameId)!=="string") {
             gameId = prompt("gameID of game youre trying to join:");
-            setGameId(gameId)
         }
         const username = prompt("Username:");
         const response = await fetch(URL+'/'+gameId, {

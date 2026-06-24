@@ -1,4 +1,8 @@
+import { useContext } from "react"
+import { StateContext } from "./App"
+
 export function GameInfo(props) {
+    const {gameId, playerNames} = useContext(StateContext)
     return (
         <div>
             <p style={{
@@ -8,8 +12,9 @@ export function GameInfo(props) {
                 vsync: ON<br />
                 fps: 165<br/>
                 ping: 25ms<br />
-                {props.player1}: X<br/>
-                {props.player2}: O
+                {playerNames[0]}: X<br/>
+                {playerNames[1]}: O<br/>
+                ID: {gameId}
             </p>
         </div>
     )
