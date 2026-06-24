@@ -100,7 +100,8 @@ export function Game() {
     //also you can play two moves before the server updates becasue we wait for that now
     console.log(`!!!! moves: ${moveList},  playter:    ${currentPlayer}`);
     treeNode.children[row][column].wonBy = currentPlayer;
-    //setMoveList(moveList.concat([treeNode.getFullRoute([row, column])]));
+    const newMove = [treeNode.getFullRoute([row, column])];
+    setMoveList(moveList[-1] !== newMove ? moveList.concat(newMove) : moveList);
     event.target.innerHTML = currentPlayer;
     console.log("this is the url: "+pathUrl+ "   this is game id "+gameId)
     fetch(pathUrl, {
