@@ -191,6 +191,7 @@ export function StateProvider({ children }) {
     return (PLAYERS[moveList.length%2])
   }, [moveList])
   // ill be real i have no idea what is going on atp
+  // please help
   const setNewBoardTree = useMemo(() => {
     for (let moveIndex = boardTree.movesPlayed; moveIndex < moveList.length; moveIndex++) {
       boardTree.movesPlayed = boardTree.movesPlayed + 1;
