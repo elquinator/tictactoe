@@ -3,7 +3,6 @@ import { StateContext } from "./App";
 
 export default function Board(props) {
     const { dimension, winDepth, previousMove } = useContext(StateContext)
-    console.log("THISSS "+dimension)
     const rows=[0,1,2];
     const columns=[0,1,2];
     const letters=['A','B','C']

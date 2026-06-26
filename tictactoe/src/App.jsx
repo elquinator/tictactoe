@@ -36,19 +36,24 @@ export function Game() {
   }, []);
 
   useEffect(() => {
-    let gameStartedFlag=false;
-    const interval = setInterval(async () => {
+    let gameStartedFlag = false;
+    const startInterval = setInterval(async () => {
       //get status on game start
       if (username !== '' && gameId !== '' && !gameStartedFlag) {
         const response = await fetch(pathUrl, { method: "GET" })
         const jsonResponse = await response.json();
         setPlayerNames([jsonResponse.playerX, jsonResponse.playerO]);
-        console.log("game started check    "+jsonResponse.playerX+'--'+jsonResponse.playerO);
+        console.log("game started check    " + jsonResponse.playerX + '--' + jsonResponse.playerO);
         gameStartedFlag = jsonResponse.gameStarted;
         setGameStarted(gameStartedFlag);
       }
+    }, 1000)
+  }, [username, gameId, setGameStarted]);
+  
+  useEffect(() => {
+    const moveInterval = setInterval(async () => {
       //set necessary info for game after start
-      else if (gameStartedFlag) {
+      if (gameStarted) {
         console.log(`move check, id: ${playerIdentifier}, current player: ${currentPlayer}`);
         const response = await fetch(pathUrl, { method: "GET" });
         const jsonResponse = await response.json();
@@ -56,13 +61,17 @@ export function Game() {
         while (respMoveList.length > moveList.length) {
           try {
             console.log("updating moves....")
+            console.log("movelist and resp move list")
+            console.log(moveList)
+            console.log(respMoveList)
             const coords = respMoveList[moveList.length];
             moveList.push(coords);
             setMoveList([...moveList]);
             console.log("moving: ", coords);
             setTimeout(() => {
-                move(coords)
-              }, 300);
+              console.log("server update move")
+              move(coords);
+            }, 300);
           }
           catch (error) {
             console.log("move failed to move: ", error);
@@ -70,13 +79,16 @@ export function Game() {
           }
         }
       }
-      }, 1000);
-  }, [username, gameId, setGameStarted]);
+    }, 1000);
+    return () => {
+      console.log(`clearing interval..`)
+      clearInterval(moveInterval);
+    }
+  }, [gameStarted, moveList]);
 
 
   const handleMove = useCallback((event, treeNode, row, column) => {
     // if our turn (x on even, o on odd)
-    console.log(`id: ${playerIdentifier}, player: ${currentPlayer}, yknow ${moveList}`)
     if (playerIdentifier == currentPlayer) {
         handleMoveImpl(event, treeNode, row, column);
     } else {
@@ -96,14 +108,12 @@ export function Game() {
       return;
     }
     //valid move
-    //movelist updating too early for current player to be correct, help
-    //also you can play two moves before the server updates becasue we wait for that now
-    console.log(`!!!! moves: ${moveList},  playter:    ${currentPlayer}`);
+    console.log(`currentplayer:    ~~~ ~ ~ ~ ~    c c c:   ${currentPlayer}`)
     treeNode.children[row][column].wonBy = currentPlayer;
-    const newMove = [treeNode.getFullRoute([row, column])];
-    setMoveList(moveList[-1] !== newMove ? moveList.concat(newMove) : moveList);
+    const newMove = treeNode.getFullRoute([row, column]);
+    setMoveList([...moveList,newMove]);
+    console.log(`THIS IS IMMEADIATE LIST AFTER MOVES:::   ${moveList}`)
     event.target.innerHTML = currentPlayer;
-    console.log("this is the url: "+pathUrl+ "   this is game id "+gameId)
     fetch(pathUrl, {
       method: "PUT",
       headers: {
@@ -187,7 +197,6 @@ export function StateProvider({ children }) {
   const [playerNames, setPlayerNames] = useState([]);
   const [dimension, setDimension] = useState(DEFAULT_DIM);
   const pathUrl = useMemo(() => {
-    console.log("$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$::gameide:"+gameId+'/'+URL)
     return URL+'/'+gameId
   }, [gameId]);
   const currentPlayer = useMemo(() => {
