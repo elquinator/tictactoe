@@ -58,20 +58,9 @@ export function Game() {
         const response = await fetch(pathUrl, { method: "GET" });
         const jsonResponse = await response.json();
         const respMoveList = jsonResponse.moves;
-        while (respMoveList.length > moveList.length) {
+        if (respMoveList.length > moveList.length) {
           try {
-            console.log("updating moves....")
-            console.log("movelist and resp move list")
-            console.log(moveList)
-            console.log(respMoveList)
-            const coords = respMoveList[moveList.length];
-            moveList.push(coords);
-            setMoveList([...moveList]);
-            console.log("moving: ", coords);
-            setTimeout(() => {
-              console.log("server update move")
-              move(coords);
-            }, 300);
+            setMoveList(respMoveList);
           }
           catch (error) {
             console.log("move failed to move: ", error);
@@ -111,9 +100,8 @@ export function Game() {
     console.log(`currentplayer:    ~~~ ~ ~ ~ ~    c c c:   ${currentPlayer}`)
     treeNode.children[row][column].wonBy = currentPlayer;
     const newMove = treeNode.getFullRoute([row, column]);
-    setMoveList([...moveList,newMove]);
+    //setMoveList([...moveList,newMove]);
     console.log(`THIS IS IMMEADIATE LIST AFTER MOVES:::   ${moveList}`)
-    event.target.innerHTML = currentPlayer;
     fetch(pathUrl, {
       method: "PUT",
       headers: {
@@ -201,6 +189,17 @@ export function StateProvider({ children }) {
   }, [gameId]);
   const currentPlayer = useMemo(() => {
     return (PLAYERS[moveList.length%2])
+  }, [moveList])
+  // ill be real i have no idea what is going on atp
+  const setNewBoardTree = useMemo(() => {
+    for (let moveIndex = boardTree.movesPlayed; moveIndex < moveList.length; moveIndex++) {
+      boardTree.movesPlayed = boardTree.movesPlayed + 1;
+      getTreeNodeForCoords(boardTree, moveList[moveIndex]).wonBy = (moveIndex % 2 ? 'O' : 'X');
+    }
+    console.log(boardTree)
+    setBoardTree(boardTree)
+    //boardTree.setActiveStatus()
+    return 0;
   }, [moveList])
 
   return (

@@ -1,61 +1,62 @@
 import { hostName, port } from "./constants"
 
 export class BoardTree {
-  constructor(parent,depth,row,column) {
-    this.parent=parent
-    this.depth=depth
-    this.row=row
-    this.column=column
-    this.children=0
-    this.wonBy=''
-    this.isActive=true
-    if (depth==0) {
-      return 0
+    constructor(parent,depth,row,column) {
+        this.parent=parent
+        this.depth=depth
+        this.row=row
+        this.column=column
+        this.children=0
+        this.wonBy=''
+        this.isActive = true
+        this.movesPlayed = 0;
+        if (depth==0) {
+          return 0
+        }
+        this.children=[]
+        for (var child1=0;child1<3;child1++) {
+          var temp=[]
+          for (var child2=0;child2<3;child2++) {
+            temp.push(new BoardTree(this,depth-1,child1,child2))
+          }
+          this.children.push(temp)
+        }
     }
-    this.children=[]
-    for (var child1=0;child1<3;child1++) {
-      var temp=[]
-      for (var child2=0;child2<3;child2++) {
-        temp.push(new BoardTree(this,depth-1,child1,child2))
+    getFullRoute(move) {
+        var route=move
+        var current=this
+        while (current.parent!=null) {
+          route=[current.row,current.column].concat(route)
+          current=current.parent
+        }
+        return route
+    }
+    adjustActiveStatus(shiftedRoute) {
+      if (this.parent==null) {
+        this.isActive=true;
       }
-      this.children.push(temp)
+      else if (this.parent.isActive==false) {
+        this.isActive=false
+      }
+      else if (this.wonBy!=='') {
+        this.isActive=false
+      }
+      else if (this.parent.children[shiftedRoute[shiftedRoute.length-(this.depth*2)]][shiftedRoute[shiftedRoute.length-(this.depth*2)+1]].wonBy!=='') {
+        this.isActive=true
+      }
+      else if (this.row==shiftedRoute[shiftedRoute.length-(this.depth*2)] && this.column==shiftedRoute[shiftedRoute.length-(this.depth*2)+1]) {
+        this.isActive=true
+      }
+      else {
+        this.isActive=false
+      }
     }
-  }
-  getFullRoute(move) {
-    var route=move
-    var current=this
-    while (current.parent!=null) {
-      route=[current.row,current.column].concat(route)
-      current=current.parent
+    setActiveStatus(shiftedRoute) {
+      this.adjustActiveStatus(shiftedRoute)
+      if (this.depth>1) {
+        this.children.map((row)=>{row.map((board)=>{board.setActiveStatus(shiftedRoute)})})
+      }
     }
-    return route
-  }
-  adjustActiveStatus(shiftedRoute) {
-    if (this.parent==null) {
-      this.isActive=true;
-    }
-    else if (this.parent.isActive==false) {
-      this.isActive=false
-    }
-    else if (this.wonBy!=='') {
-      this.isActive=false
-    }
-    else if (this.parent.children[shiftedRoute[shiftedRoute.length-(this.depth*2)]][shiftedRoute[shiftedRoute.length-(this.depth*2)+1]].wonBy!=='') {
-      this.isActive=true
-    }
-    else if (this.row==shiftedRoute[shiftedRoute.length-(this.depth*2)] && this.column==shiftedRoute[shiftedRoute.length-(this.depth*2)+1]) {
-      this.isActive=true
-    }
-    else {
-      this.isActive=false
-    }
-  }
-  setActiveStatus(shiftedRoute) {
-    this.adjustActiveStatus(shiftedRoute)
-    if (this.depth>1) {
-      this.children.map((row)=>{row.map((board)=>{board.setActiveStatus(shiftedRoute)})})
-    }
-  }
 }
 
 export function checkWin(toCheck) {

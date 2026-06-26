@@ -2,7 +2,7 @@ import { useContext } from "react";
 import { StateContext } from "./App";
 
 export default function Board(props) {
-    const { dimension, winDepth, previousMove } = useContext(StateContext)
+    const { dimension, winDepth, previousMove, moveList } = useContext(StateContext)
     const rows=[0,1,2];
     const columns=[0,1,2];
     const letters=['A','B','C']
@@ -48,7 +48,8 @@ export default function Board(props) {
                                         border: 0,
                                         margin: "2px",
                                         fontSize: "30px"
-                                    }}>
+                                        }}>
+                                        {moveList.findIndex((arr) => arr.join('') === props.treeNode.getFullRoute([row, column]).join('')) > -1 && (moveList.findIndex((arr) => arr.join('') === props.treeNode.getFullRoute([row, column]).join('')) % 2 ? 'O' : 'X')}
                                     </button>
                                 )}
                                 {row == 2 && props.depth == dimension ? <h1 style={{color:"rgb(134, 0, 0)"}}>{column+1}</h1> : ''}
