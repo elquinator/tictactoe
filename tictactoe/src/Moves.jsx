@@ -3,8 +3,8 @@ import { debugLog, StateContext } from "./App";
 import logo from "./tictactoelogo.png"
 import { URL } from "./constants";
 
-export function GameAutomation(props) {
-    const {setGameId, setPlayerIdentifier, setUsername} = useContext(StateContext)
+export function GameAutomation() {
+    const {setGameId, setPlayerIdentifier, setUsername, setCurrentPlayer} = useContext(StateContext)
 
     const createGame = useCallback(async() => {
         //const username = prompt("Username:");
@@ -38,7 +38,8 @@ export function GameAutomation(props) {
         console.log(jsonResponse.playerIdentifier)
         if (jsonResponse.error) {
             alert("Game does not exist vro.");
-        } else {
+        }
+        else {
             setPlayerIdentifier(jsonResponse.playerIdentifier);
             setUsername(username);
             setGameId(gameId);
@@ -88,7 +89,7 @@ export function GameAutomation(props) {
     );
 }
 
-export function Premover(props) {
+export function Premover() {
     const premover = useCallback((moveIndex) => {
         // we're going to fake out event and then find the right treemove by coordinate
         // must assume board size since this is NOT a generic debugging tool: depth = 3
@@ -309,10 +310,9 @@ export function Premover(props) {
         // Execute moves with a delay between them
         moves[moveIndex].forEach((move, index) => {
             setTimeout(() => {
-                props.move(move);
             }, index * 300); // 500ms delay between moves
         });
-    }, [props.move])
+    }, [])
 
     return (
         <div style={{

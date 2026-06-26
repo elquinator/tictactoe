@@ -2,7 +2,7 @@ import { useContext } from "react";
 import { StateContext } from "./App";
 
 export default function Board(props) {
-    const { dimension, winDepth, previousMove, moveList } = useContext(StateContext)
+    const { dimension, winDepth, previousMove, moveList, playerIdentifier, currentPlayer } = useContext(StateContext)
     const rows=[0,1,2];
     const columns=[0,1,2];
     const letters=['A','B','C']
@@ -14,8 +14,8 @@ export default function Board(props) {
     return (
         <div id={"board-" + props.depth + "-" + props.row + "-" + props.column} style={{
             padding: `${(props.depth+1)*25}px`,
-            border: boardActiveFlag? "1px solid green":"",
-            backgroundColor: boardActiveFlag? "green":"#ddd"
+            border: (boardActiveFlag && currentPlayer === playerIdentifier) ? "1px solid green" : "",
+            backgroundColor: (boardActiveFlag && currentPlayer === playerIdentifier) ? "green" : "#ddd"
         }}>
             <table>
                 {rows.map((row)=>(
