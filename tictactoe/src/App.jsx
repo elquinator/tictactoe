@@ -22,7 +22,6 @@ export function Game() {
     const moveInterval = setInterval(async () => {
       //set necessary info for game after start
       if (username !== '' && gameId !== '') {
-        console.log(`move check, id: ${playerIdentifier}, current player: ${currentPlayer}`);
         const response = await fetch(pathUrl, { method: "GET" });
         const jsonResponse = await response.json();
         const respMoveList = jsonResponse.moves;
@@ -30,7 +29,7 @@ export function Game() {
           setPlayerNames([jsonResponse.playerX, jsonResponse.playerO]);
           setGameStarted(jsonResponse.gameStarted);
         }
-        if (respMoveList.length > moveList.length) {
+        if (respMoveList.length !== moveList.length) {
           try {
             updateBoardTree(respMoveList);
           }

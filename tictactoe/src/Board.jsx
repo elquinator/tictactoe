@@ -48,7 +48,7 @@ export default function Board(props) {
                                         border: 0,
                                         margin: "2px",
                                         fontSize: "30px"
-                                        }}>
+                                        }} disabled = {!boardActiveFlag}>
                                         {moveList.findIndex((arr) => arr.join('') === props.treeNode.getFullRoute([row, column]).join('')) > -1 && (moveList.findIndex((arr) => arr.join('') === props.treeNode.getFullRoute([row, column]).join('')) % 2 ? 'O' : 'X')}
                                     </button>
                                 )}
