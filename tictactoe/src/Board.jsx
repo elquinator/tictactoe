@@ -2,7 +2,7 @@ import { useContext } from "react";
 import { StateContext } from "./App";
 
 export default function Board(props) {
-    const { dimension, winDepth, previousMove, moveList, playerIdentifier, currentPlayer } = useContext(StateContext)
+    const { dimension, winDepth, previousMove, playerIdentifier, currentPlayer } = useContext(StateContext)
     const rows=[0,1,2];
     const columns=[0,1,2];
     const letters=['A','B','C']
@@ -28,7 +28,18 @@ export default function Board(props) {
                              }}>
                                 {props.depth>1 && (
                                     <>
-                                        <Board depth={props.depth-1} row={row} column={column} handleMove={props.handleMove} treeNode={props.treeNode.children[row][column]} winDepth={winDepth} previousMove={previousMove} dimension={dimension} />
+                                        <h1 style={{
+                                            width: "100%",
+                                            height: "100%",
+                                            fontSize: "200px",
+                                            textAlign: "center",
+                                            position: "relative"
+                                        }}>
+                                            {props.treeNode.wonBy}
+                                        </h1>
+                                        <Board depth={props.depth-1} row={row} column={column} handleMove={props.handleMove}
+                                         treeNode={props.treeNode.children[row][column]} winDepth={winDepth} previousMove={previousMove} dimension={dimension}
+                                         style= {{position: "absolute"}} />
                                         {//true && (
                                          //   <div style={{position: "absolute"}}>
                                          //       <h>{columns[column]}</h>
@@ -37,6 +48,7 @@ export default function Board(props) {
                                         }
                                     </>
                                 )}
+                              
                                 {props.depth===1 && (
                                     <button id={`cell-${props.treeNode.getFullRoute([row,column]).join('-')}`} onClick={(event) => {
                                             props.handleMove(event,props.treeNode,row,column)

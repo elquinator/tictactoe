@@ -1,5 +1,3 @@
-import { hostName, port, PLAYERS } from "./constants"
-
 export class BoardTree {
     constructor(parent,depth,row,column) {
         this.parent=parent

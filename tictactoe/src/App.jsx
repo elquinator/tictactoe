@@ -26,19 +26,16 @@ export function Game() {
         const jsonResponse = await response.json();
         const respMoveList = jsonResponse.moves;
         if (!gameStarted) {
+          const newBoardTree = _.cloneDeep(new BoardTree(null, jsonResponse.gameDimension, 0, 0));
           setPlayerNames([jsonResponse.playerX, jsonResponse.playerO]);
           setGameStarted(jsonResponse.gameStarted);
-          setGameDimension(jsonResponse.gameDimension);
-          setBoardTree(_.cloneDeep(new BoardTree(null, jsonResponse.gameDimension, 0, 0)));
+          setGameDimension(jsonResponse.gameDimension);  
+          setBoardTree(newBoardTree);
+          updateBoardTree(respMoveList, newBoardTree);
+
         }
-        if (respMoveList.length !== moveList.length) {
-          try {
-            updateBoardTree(respMoveList);
-          }
-          catch (error) {
-            console.log("move failed to move: ", error);
-            return;
-          }
+        else if (respMoveList.length !== moveList.length) {
+          updateBoardTree(respMoveList, boardTree);
         }
       }
     }, 1000);
@@ -73,7 +70,7 @@ export function Game() {
     //treeNode.children[row][column].wonBy = currentPlayer;
     const newMove = treeNode.getFullRoute([row, column]);
     const newMoveList = [...moveList, newMove];
-    updateBoardTree(newMoveList);
+    updateBoardTree(newMoveList, boardTree);
     console.log(`THIS IS IMMEADIATE LIST AFTER MOVES:::   ${newMoveList}`)
     fetch(pathUrl, {
       method: "PUT",
@@ -146,35 +143,40 @@ export function StateProvider({ children }) {
   }, [moveList])
   // ill be real i have no idea what is going on atp
   // please help
-  const updateBoardTree = useCallback((moveList) => {
+  const updateBoardTree = useCallback((moveList, boardTree) => {
     setMoveList(moveList);
+    console.log(`movelist length: ${moveList.length}, boardtreenum: ${boardTree.numOfMovesPlayed}`)
     for (let moveIndex = boardTree.numOfMovesPlayed; moveIndex < moveList.length; moveIndex++) {
+      const playerCurrent = (moveIndex % 2 === 0) ? 'X' : 'O';
+      console.log(moveIndex)
       const currentMove = moveList[moveIndex];
+      console.log(currentMove)
       const treeNode = getTreeNodeForCoords(boardTree, moveList[moveIndex].slice(0, moveList[moveIndex].length - 2));
       let currentBoard = treeNode;
       let winDepth = 0;
       let coords = [];
-      currentBoard.children[currentMove[currentMove.length - 2]][currentMove[currentMove.length - 1]].wonBy = currentPlayer;
+      currentBoard.children[currentMove[currentMove.length - 2]][currentMove[currentMove.length - 1]].wonBy = playerCurrent;
       while (checkWin(currentBoard)) {
         coords = [currentBoard.row, currentBoard.column];
         if (currentBoard.parent == null) {
-          boardTree.wonBy = currentPlayer;
-          alert(`${currentPlayer} won the game!`);
+          boardTree.wonBy = playerCurrent;
+          alert(`${playerCurrent} won the game!`);
           break;
         }
         currentBoard = currentBoard.parent;
         //this line has changed according to "new standards":
-        currentBoard.children[coords[0]][coords[1]].wonBy = currentPlayer;
+        currentBoard.children[coords[0]][coords[1]].wonBy = playerCurrent;
         winDepth++;
       }
       boardTree.numOfMovesPlayed = boardTree.numOfMovesPlayed + 1;
-      getTreeNodeForCoords(boardTree, currentMove).wonBy = currentPlayer;
+      getTreeNodeForCoords(boardTree, currentMove).wonBy = playerCurrent;
+      console.log(boardTree)
       boardTree.setActiveStatus(calculateShift([treeNode, currentMove[currentMove.length - 2], currentMove[currentMove.length - 1], winDepth]));
     }
     console.log(boardTree);
     setBoardTree(_.cloneDeep(boardTree));
     return 0;
-  }, [boardTree, currentPlayer])
+  }, [])
 
   return (
     <StateContext.Provider value={{
@@ -188,7 +190,6 @@ export function StateProvider({ children }) {
 }
 
 export default function App() {
-  const [gameDimension, setGameDimension] = useState(DEFAULT_DIM);
   return (
     <StateProvider>
       <Game/>
