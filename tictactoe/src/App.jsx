@@ -16,7 +16,7 @@ export const StateContext = createContext({
 export function Game() {
   const {boardTree, url, gameId, username, setPlayerNames, setGameStarted, moveList, setMoveList, 
     currentPlayer, setWinDepth, setPreviousMove, setBoardTree, previousMove, gameStarted, playerNames, playerIdentifier,
-    dimension, pathUrl, updateBoardTree } = useContext(StateContext)
+    gameDimension, pathUrl, updateBoardTree, setGameDimension } = useContext(StateContext)
   
   useEffect(() => {
     const moveInterval = setInterval(async () => {
@@ -28,6 +28,8 @@ export function Game() {
         if (!gameStarted) {
           setPlayerNames([jsonResponse.playerX, jsonResponse.playerO]);
           setGameStarted(jsonResponse.gameStarted);
+          setGameDimension(jsonResponse.gameDimension);
+          setBoardTree(_.cloneDeep(new BoardTree(null, jsonResponse.gameDimension, 0, 0)));
         }
         if (respMoveList.length !== moveList.length) {
           try {
@@ -105,7 +107,7 @@ export function Game() {
         {username !== '' && gameStarted && (
           <>
             <GameInfo/>
-            <Board depth={dimension} row={0} column={0} handleMove={handleMove} treeNode={boardTree} />
+            <Board depth={gameDimension} row={0} column={0} handleMove={handleMove} treeNode={boardTree} />
           </>
         )}
         {username !== '' && !gameStarted && (
@@ -135,7 +137,7 @@ export function StateProvider({ children }) {
   //this one never actually changes, take issues up with the Big Man
   const [playerIdentifier, setPlayerIdentifier] = useState('');
   const [playerNames, setPlayerNames] = useState([]);
-  const [dimension, setDimension] = useState(DEFAULT_DIM);
+  const [gameDimension, setGameDimension] = useState(DEFAULT_DIM);
   const pathUrl = useMemo(() => {
     return URL+'/'+gameId
   }, [gameId]);
@@ -144,16 +146,6 @@ export function StateProvider({ children }) {
   }, [moveList])
   // ill be real i have no idea what is going on atp
   // please help
-  const setNewBoardTree = useMemo(() => {
-    for (let moveIndex = boardTree.movesPlayed; moveIndex < moveList.length; moveIndex++) {
-      boardTree.movesPlayed = boardTree.movesPlayed + 1;
-      getTreeNodeForCoords(boardTree, moveList[moveIndex]).wonBy = (moveIndex % 2 ? 'O' : 'X');
-    }
-    console.log(boardTree)
-    setBoardTree(boardTree)
-    //boardTree.setActiveStatus()
-    return 0;
-  }, [moveList])
   const updateBoardTree = useCallback((moveList) => {
     setMoveList(moveList);
     for (let moveIndex = boardTree.numOfMovesPlayed; moveIndex < moveList.length; moveIndex++) {
@@ -167,6 +159,7 @@ export function StateProvider({ children }) {
         coords = [currentBoard.row, currentBoard.column];
         if (currentBoard.parent == null) {
           boardTree.wonBy = currentPlayer;
+          alert(`${currentPlayer} won the game!`);
           break;
         }
         currentBoard = currentBoard.parent;
@@ -185,8 +178,8 @@ export function StateProvider({ children }) {
 
   return (
     <StateContext.Provider value={{
-      moveList, currentPlayer, boardTree, previousMove, winDepth, gameStarted, username, gameId, playerIdentifier, playerNames, dimension, pathUrl,
-      setMoveList, setBoardTree, setPreviousMove, setWinDepth, setGameStarted, setUsername, setGameId, setPlayerIdentifier, setPlayerNames, setDimension,
+      moveList, currentPlayer, boardTree, previousMove, winDepth, gameStarted, username, gameId, playerIdentifier, playerNames, gameDimension, pathUrl,
+      setMoveList, setBoardTree, setPreviousMove, setWinDepth, setGameStarted, setUsername, setGameId, setPlayerIdentifier, setPlayerNames, setGameDimension,
       updateBoardTree
     }}>
       {children}
@@ -195,7 +188,7 @@ export function StateProvider({ children }) {
 }
 
 export default function App() {
-  const [dimension, setDimension] = useState(3);
+  const [gameDimension, setGameDimension] = useState(DEFAULT_DIM);
   return (
     <StateProvider>
       <Game/>

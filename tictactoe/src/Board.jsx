@@ -48,8 +48,8 @@ export default function Board(props) {
                                         border: 0,
                                         margin: "2px",
                                         fontSize: "30px"
-                                        }} disabled = {!boardActiveFlag}>
-                                        {moveList.findIndex((arr) => arr.join('') === props.treeNode.getFullRoute([row, column]).join('')) > -1 && (moveList.findIndex((arr) => arr.join('') === props.treeNode.getFullRoute([row, column]).join('')) % 2 ? 'O' : 'X')}
+                                        }} disabled = {!props.treeNode.children[row][column].isActive}>
+                                        {props.treeNode.children[row][column].wonBy}
                                     </button>
                                 )}
                                 {row == 2 && props.depth == dimension ? <h1 style={{color:"rgb(134, 0, 0)"}}>{column+1}</h1> : ''}

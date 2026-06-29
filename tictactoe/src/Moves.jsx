@@ -2,15 +2,24 @@ import {useCallback, useContext} from "react";
 import { debugLog, StateContext } from "./App";
 import logo from "./tictactoelogo.png"
 import { URL } from "./constants";
+import { BoardTree } from "./util";
+import _ from "lodash";
 
 export function GameAutomation() {
-    const {setGameId, setPlayerIdentifier, setUsername, setCurrentPlayer} = useContext(StateContext)
+    const {setGameId, setPlayerIdentifier, setUsername, setCurrentPlayer, setGameDimension, setBoardTree} = useContext(StateContext)
 
-    const createGame = useCallback(async() => {
-        //const username = prompt("Username:");
-        //gameState.setUsername(username);
+    const createGame = useCallback(async () => {
+        const gameDimension = prompt("dimension of game you want to create:");
+        setGameDimension(gameDimension);
+        setBoardTree(_.cloneDeep(new BoardTree(null, gameDimension, 0, 0)));
         const response = await fetch(URL, {
             method: "POST",
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                gameDimension: gameDimension
+            })
         });
         const jsonResponse = await response.json();
         const gameId = jsonResponse.gameID;
