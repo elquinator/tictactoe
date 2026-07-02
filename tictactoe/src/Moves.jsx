@@ -31,7 +31,8 @@ export function GameAutomation() {
         if (typeof(gameId)!=="string") {
             gameId = prompt("gameID of game youre trying to join:");
         }
-        const username = prompt("Username:");
+        let username = prompt("Username:");
+        username = username === '' ? "unnamedLoser" : username;
         const response = await fetch(URL+'/'+gameId, {
             method: "PUT",
             headers: {
@@ -98,253 +99,43 @@ export function GameAutomation() {
     );
 }
 
-export function Premover() {
-    const premover = useCallback((moveIndex) => {
-        // we're going to fake out event and then find the right treemove by coordinate
-        // must assume board size since this is NOT a generic debugging tool: depth = 3
-        // here's the dillio: coordinates = [topx, topy, nextx, nexty, nextx, nexty, row, column]
-        // Use setTimeout to handle asynchronous state updates
-        // This ensures each move is processed completely before the next one
-        const moves = [
-            // pattern 0: normal win move pattern: move sets super parent coord, win sets superparent coord
-            [
-                [0, 0, 0, 0, 2, 2],
-                [0, 0, 2, 2, 0, 0],
-                [0, 0, 0, 0, 0, 0],
-                [0, 0, 0, 0, 2, 0],
-                [0, 0, 2, 0, 1, 0],
-                [0, 0, 1, 0, 0, 0],
-                [0, 0, 0, 0, 1, 1]
-            ],
-            // pattern 1: unrestricted grandparent board move on win BECAUSE COLLISION
-            [
-                [0, 0, 0, 0, 2, 2],
-                [0, 0, 2, 2, 0, 0],
-                [0, 0, 0, 0, 1, 1],
-                [0, 0, 1, 1, 0, 0],
-                [0, 0, 0, 0, 0, 0]
-            ],
-            // pattern 2: top left superboard win with no collision, but WITH restriction at bottom right
-            [
-                [0, 0, 0, 0, 2, 2],
-                [0, 0, 2, 2, 0, 0],
-                [0, 0, 0, 0, 0, 0],
-                [0, 0, 0, 0, 2, 0],
-                [0, 0, 2, 0, 1, 1],
-                [0, 0, 1, 1, 0, 0],
-                [0, 0, 0, 0, 1, 1],
-                [0, 0, 1, 1, 2, 2],
-                [0, 0, 2, 2, 1, 1],
-                [0, 0, 1, 1, 2, 1],
-                [0, 0, 2, 1, 2, 1],
-                [0, 0, 2, 1, 1, 1],
-                [0, 0, 1, 1, 1, 1],
-                [0, 0, 1, 1, 0, 2],
-                [0, 0, 0, 2, 0, 0],
-                [0, 0, 0, 1, 1, 1],
-                [0, 0, 1, 1, 1, 2],
-                [0, 0, 1, 2, 1, 1],
-                [0, 0, 1, 1, 1, 0],
-                [1, 1, 1, 0, 0, 2],
-                [1, 1, 0, 2, 1, 1],
-                [1, 1, 1, 1, 0, 0],
-                [1, 1, 0, 0, 1, 1],
-                [1, 1, 1, 1, 0, 2],
-                [1, 1, 0, 2, 0, 2],
-                [1, 1, 0, 2, 2, 2],
-                [1, 1, 2, 2, 0, 2],
-                [1, 1, 0, 2, 0, 0],
-                [1, 1, 0, 0, 0, 0],
-                [1, 1, 0, 0, 1, 2],
-                [1, 1, 1, 2, 2, 0],
-                [1, 1, 2, 0, 2, 2],
-                [1, 1, 2, 2, 2, 2],
-                [1, 1, 2, 2, 0, 0],
-                [1, 1, 0, 0, 2, 2],
-                [0, 0, 2, 2, 1, 0],
-                [0, 0, 1, 0, 1, 0],
-                [0, 0, 1, 0, 2, 2],
-                [0, 0, 2, 2, 0, 2],
-                [0, 0, 0, 2, 2, 2],
-                [0, 0, 2, 2, 2, 0]
-            ],
-            // pattern 3: unrestricted, but proposed restricted, copy pattern but at super board win with double collision, NO restriction
-            [
-                [0, 0, 0, 0, 2, 2],
-                [0, 0, 2, 2, 0, 0],
-                [0, 0, 0, 0, 0, 0],
-                [0, 0, 0, 0, 2, 0],
-                [0, 0, 2, 0, 1, 1],
-                [0, 0, 1, 1, 0, 0],
-                [0, 0, 0, 0, 1, 1],
-                [0, 0, 1, 1, 2, 2],
-                [0, 0, 2, 2, 1, 1],
-                [0, 0, 1, 1, 2, 1],
-                [0, 0, 2, 1, 2, 1],
-                [0, 0, 2, 1, 1, 1],
-                [0, 0, 1, 1, 1, 1],
-                [0, 0, 1, 1, 0, 2],
-                [0, 0, 0, 2, 0, 0],
-                [0, 0, 0, 1, 1, 1],
-                [0, 0, 1, 1, 1, 2],
-                [0, 0, 1, 2, 1, 1],
-                [0, 0, 1, 1, 1, 0],
-                [1, 1, 1, 0, 0, 2],
-                [1, 1, 0, 2, 1, 1],
-                [1, 1, 1, 1, 0, 0],
-                [1, 1, 0, 0, 1, 1],
-                [1, 1, 1, 1, 0, 2],
-                [1, 1, 0, 2, 0, 2],
-                [1, 1, 0, 2, 2, 2],
-                [1, 1, 2, 2, 0, 2],
-                [1, 1, 0, 2, 0, 0],
-                [1, 1, 0, 0, 0, 0],
-                [1, 1, 0, 0, 1, 2],
-                [1, 1, 1, 2, 2, 0],
-                [1, 1, 2, 0, 2, 2],
-                [1, 1, 2, 2, 2, 2],
-                [1, 1, 2, 2, 0, 0],
-                [1, 1, 0, 0, 2, 2],
-                [0, 0, 2, 2, 1, 0],
-                [0, 0, 1, 0, 1, 0],
-                [0, 0, 1, 0, 2, 2],
-                [0, 0, 2, 2, 0, 2],
-                [0, 0, 0, 2, 2, 2],
-                [0, 0, 2, 2, 2, 0],
-                [2, 2, 2, 0, 0, 0],
-                [2, 2, 0, 0, 0, 0],
-                [2, 2, 0, 0, 2, 1],
-                [2, 2, 2, 1, 2, 1],
-                [2, 2, 2, 1, 0, 0],
-                [2, 2, 0, 0, 2, 2],
-                [2, 2, 2, 2, 0, 0]
-            ],
-            // pattern 3: unrestricted, but proposed restricted, copy pattern but at super board win with double collision, NO restriction
-            [
-                [0, 0, 0, 0, 2, 2],
-                [0, 0, 2, 2, 0, 0],
-                [0, 0, 0, 0, 0, 0],
-                [0, 0, 0, 0, 2, 0],
-                [0, 0, 2, 0, 1, 1],
-                [0, 0, 1, 1, 0, 0],
-                [0, 0, 0, 0, 1, 1],
-                [0, 0, 1, 1, 2, 2],
-                [0, 0, 2, 2, 1, 1],
-                [0, 0, 1, 1, 2, 1],
-                [0, 0, 2, 1, 2, 1],
-                [0, 0, 2, 1, 1, 1],
-                [0, 0, 1, 1, 1, 1],
-                [0, 0, 1, 1, 0, 2],
-                [0, 0, 0, 2, 0, 0],
-                [0, 0, 0, 1, 1, 1],
-                [0, 0, 1, 1, 1, 2],
-                [0, 0, 1, 2, 1, 1],
-                [0, 0, 1, 1, 1, 0],
-                [1, 1, 1, 0, 0, 2],
-                [1, 1, 0, 2, 1, 1],
-                [1, 1, 1, 1, 0, 0],
-                [1, 1, 0, 0, 1, 1],
-                [1, 1, 1, 1, 0, 2],
-                [1, 1, 0, 2, 0, 2],
-                [1, 1, 0, 2, 2, 2],
-                [1, 1, 2, 2, 0, 2],
-                [1, 1, 0, 2, 0, 0],
-                [1, 1, 0, 0, 0, 0],
-                [1, 1, 0, 0, 1, 2],
-                [1, 1, 1, 2, 2, 0],
-                [1, 1, 2, 0, 2, 2],
-                [1, 1, 2, 2, 2, 2],
-                [1, 1, 2, 2, 0, 0],
-                [1, 1, 0, 0, 2, 2],
-                [0, 0, 2, 2, 1, 0],
-                [0, 0, 1, 0, 1, 0],
-                [0, 0, 1, 0, 2, 2],
-                [0, 0, 2, 2, 0, 2],
-                [0, 0, 0, 2, 2, 2],
-                [0, 0, 2, 2, 2, 0],
-                [2, 2, 2, 0, 0, 0],
-                [2, 2, 0, 0, 0, 0],
-                [2, 2, 0, 0, 2, 1],
-                [2, 2, 2, 1, 2, 1],
-                [2, 2, 2, 1, 0, 0],
-                [2, 2, 0, 0, 2, 2],
-                [2, 2, 2, 2, 0, 0],
-                [2, 2, 0, 0, 1, 1],
-                [0, 1, 1, 1, 0, 0],
-                [0, 1, 0, 0, 2, 0],
-                [0, 1, 2, 0, 0, 0],
-                [0, 1, 0, 0, 1, 0],
-                [0, 1, 1, 0, 0, 0],
-                [0, 1, 0, 0, 0, 0]
-            ],
-            // pattern 4: testing
-            [
-                [0, 0, 0, 0, 2, 2],
-                [0, 0, 2, 2, 0, 0],
-                [0, 0, 0, 0, 1, 1],
-                [0, 0, 1, 1, 0, 0],
-                [0, 0, 0, 0, 0, 0],
-                [0, 0, 1, 0, 1, 1],
-                [0, 0, 1, 1, 0, 1],
-                [0, 0, 0, 1, 1, 1],
-                [0, 0, 1, 1, 0, 2],
-                [0, 0, 0, 2, 1, 1],
-                [0, 0, 1, 1, 1, 2],
-                [0, 0, 1, 2, 1, 1],
-                [0, 0, 1, 1, 2, 2],
-                [1, 1, 2, 2, 0, 0],
-                [1, 1, 0, 0, 0, 0],
-                [1, 1, 0, 0, 2, 0],
-                [1, 1, 2, 0, 2, 0],
-                [1, 1, 2, 0, 0, 0],
-                [1, 1, 0, 0, 0, 1],
-                [1, 1, 0, 1, 0, 0],
-                [1, 1, 0, 0, 0, 2],
-                [0, 0, 0, 2, 2, 2],
-                [0, 0, 2, 2, 2, 0],
-                [0, 0, 2, 0, 2, 2],
-                [0, 0, 2, 2, 2, 1],
-                [0, 0, 2, 1, 2, 2],
-                [0, 0, 2, 2, 2, 2],
-                [2, 2, 2, 2, 0, 0]
-            ],
-        ];
-        // store coords you want to move manually in manual and send them in with premover
-        //console.log(gameState.manual)
-        //if (gameState.manual !== '') {
-        //    console.log("attempting premove: ",gameState.manual)
-        //    premove(gameState.manual)
-        //    return;
-        //}
-        // Execute moves with a delay between them
-        moves[moveIndex].forEach((move, index) => {
-            setTimeout(() => {
-            }, index * 300); // 500ms delay between moves
-        });
-    }, [])
-
-    return (
-        <div style={{
-            border: "5px solid #031433",
-            paddingRight: "20px",
-            paddingLeft: "10px",
-            backgroundColor: "#222222",
-            width: "70px"
-        }}>
-            <h2 style={{color: "white"}}>Premov</h2>
-            <button onClick={premover.bind(this, 0)}>[0] Premove 1</button>
-            <button onClick={premover.bind(this, 1)}>[1] Premove 2</button>
-            <button onClick={premover.bind(this, 2)}>[2] Premove 3</button>
-            <button onClick={premover.bind(this, 3)}>[3] Premove 4</button>
-            <button onClick={premover.bind(this, 4)}>[4] Premove 5</button>
-            <button onClick={premover.bind(this, 5)}>[5] Premove 6</button>
-            <button onClick={premover.bind(this, 6)}>[6] Premove 7</button>
-        </div>
-    )}
-
 export default function Moves() {
-    const {moveList} = useContext(StateContext)
-    const letters=['A','B','C']
+    const { moveList, pathUrl, boardTree, playerNames, username } = useContext(StateContext);
+    const letters = ['A', 'B', 'C'];
+    const undoMove = () => {
+        fetch(pathUrl, {
+            method: "PUT",
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                action: 'undoMove',
+                playerWhoRequestedSkip: username,
+                confirmSkip: false
+            })
+        })
+    }
+    const doMoves = () => {
+        let moves = prompt("moves:");
+        if (!moves) {
+            return;
+        }
+        moves = moves.split(' ');
+        let newMoves = [];
+        for (const move of moves) {
+            newMoves.push(move.split('').map((moveToken) => { const index = letters.indexOf(moveToken); return Number(index !== -1 ? index : moveToken-1) }));
+        }
+        fetch(pathUrl, {
+          method: "PUT",
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            action: 'setMoves',
+            moves: newMoves
+          })
+        })
+    }
     return (
         <div style={{
             border:"5px solid #031433",
@@ -361,6 +152,12 @@ export default function Moves() {
                     )}</li>
                 )}
             </ol>
+            <button onClick={undoMove}>
+                Undo Move
+            </button>
+            <button onClick={doMoves}>
+                setMoveList
+            </button>
         </div>
     )
 }

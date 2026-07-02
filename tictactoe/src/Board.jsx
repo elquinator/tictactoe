@@ -1,5 +1,11 @@
 import { useContext } from "react";
 import { StateContext } from "./App";
+import O from "./O.png"
+import X from "./X.png"
+const IMAGES = {
+    "X": X,
+    "O": O
+}
 
 export default function Board(props) {
     const { dimension, winDepth, previousMove, playerIdentifier, currentPlayer } = useContext(StateContext)
@@ -13,39 +19,39 @@ export default function Board(props) {
     }
     return (
         <div id={"board-" + props.depth + "-" + props.row + "-" + props.column} style={{
-            padding: `${(props.depth+1)*25}px`,
+            padding: `${(props.depth+1)*15}px`,
             border: (boardActiveFlag && currentPlayer === playerIdentifier) ? "1px solid green" : "",
-            backgroundColor: (boardActiveFlag && currentPlayer === playerIdentifier) ? "green" : "#ddd"
+            backgroundColor: (boardActiveFlag && currentPlayer === playerIdentifier) ? "green" : "#ddd",
+            position: "relative"
         }}>
             <table>
-                {rows.map((row)=>(
+                {rows.map((row) => (
                     <tr>
                         {props.depth == dimension ? <h1 style={{ display: "table-cell", height:"100%", verticalAlign: "middle", color:"rgb(134, 0, 0)"}}>{letters[row]}</h1>:''}
                         {columns.map((column)=>(
                             <td id={"cell-" + "-" + props.depth + "-" + props.row + "-" + props.column + "-" + row + "-" + column} style={{
                                 borderBottom: row<2? `${props.depth*3+1}px solid black`:'',
-                                borderLeft: column>0? `${props.depth*3+1}px solid black`:''
+                                borderLeft: column > 0 ? `${props.depth * 3 + 1}px solid black` : '',
+                                position: "relative",
+                                margin: "0px",
+                                padding: "0px"
                              }}>
                                 {props.depth>1 && (
                                     <>
-                                        <h1 style={{
-                                            width: "100%",
-                                            height: "100%",
-                                            fontSize: "200px",
-                                            textAlign: "center",
-                                            position: "relative"
-                                        }}>
-                                            {props.treeNode.wonBy}
-                                        </h1>
                                         <Board depth={props.depth-1} row={row} column={column} handleMove={props.handleMove}
                                          treeNode={props.treeNode.children[row][column]} winDepth={winDepth} previousMove={previousMove} dimension={dimension}
                                          style= {{position: "absolute"}} />
-                                        {//true && (
-                                         //   <div style={{position: "absolute"}}>
-                                         //       <h>{columns[column]}</h>
-                                         //   </div>
-                                        //)
-                                        }
+                                        {props.depth>0 && (<div style={{
+                                            width: "100%",
+                                            height: "100%",
+                                            top: "0px",
+                                            left: "0px",
+                                            position: "absolute",
+                                            pointerEvents: "none"
+                                        }}>
+                                            {props.treeNode.children[row][column].wonBy !== '' && (
+                                                <img src={(props.depth > 1) ? IMAGES[props.treeNode.children[row][column].wonBy] : ''} style={{ height: "100%", width: "100%" }} />)}
+                                        </div>)}
                                     </>
                                 )}
                               

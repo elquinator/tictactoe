@@ -32,7 +32,19 @@ export function Game() {
           setGameDimension(jsonResponse.gameDimension);  
           setBoardTree(newBoardTree);
           updateBoardTree(respMoveList, newBoardTree);
-
+        }
+        if ((jsonResponse.playerWhoRequestedSkip !== username && jsonResponse.playerWhoRequestedSkip !== '') && (username === jsonResponse.playerO || username === jsonResponse.playerX)) {
+          const skipConfirm = window.confirm(`${jsonResponse.playerWhoRequestedSkip} has requested a skip. Would you like to accept?`) ? username : '';
+          fetch(pathUrl, {
+            method: "PUT",
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              action: 'undoMove',
+              playerWhoRequestedSkip: skipConfirm
+            })
+          })
         }
         else if (respMoveList.length !== moveList.length) {
           updateBoardTree(respMoveList, boardTree);
@@ -40,7 +52,6 @@ export function Game() {
       }
     }, 1000);
     return () => {
-      console.log(`clearing interval..`)
       clearInterval(moveInterval);
     }
   }, [gameStarted, moveList, username, gameId, setGameStarted]);
@@ -66,12 +77,10 @@ export function Game() {
       return;
     }
     //valid move
-    console.log(`currentplayer:    ~~~ ~ ~ ~ ~    c c c:   ${currentPlayer}`)
     //treeNode.children[row][column].wonBy = currentPlayer;
     const newMove = treeNode.getFullRoute([row, column]);
     const newMoveList = [...moveList, newMove];
     updateBoardTree(newMoveList, boardTree);
-    console.log(`THIS IS IMMEADIATE LIST AFTER MOVES:::   ${newMoveList}`)
     fetch(pathUrl, {
       method: "PUT",
       headers: {
@@ -82,8 +91,6 @@ export function Game() {
         move: treeNode.getFullRoute([row, column]),
       })
     })
-    //console.log("this is impornatn nonw")
-    //console.log(calculateShift([treeNode,row,column,winDepth]))
   },[currentPlayer, boardTree, PLAYERS, moveList, gameId]);
 
   return (
@@ -141,16 +148,10 @@ export function StateProvider({ children }) {
   const currentPlayer = useMemo(() => {
     return (PLAYERS[moveList.length%2])
   }, [moveList])
-  // ill be real i have no idea what is going on atp
-  // please help
-  const updateBoardTree = useCallback((moveList, boardTree) => {
-    setMoveList(moveList);
-    console.log(`movelist length: ${moveList.length}, boardtreenum: ${boardTree.numOfMovesPlayed}`)
+  const evaluateMovesOnBoardTree = (moveList, boardTree) => {
     for (let moveIndex = boardTree.numOfMovesPlayed; moveIndex < moveList.length; moveIndex++) {
       const playerCurrent = (moveIndex % 2 === 0) ? 'X' : 'O';
-      console.log(moveIndex)
       const currentMove = moveList[moveIndex];
-      console.log(currentMove)
       const treeNode = getTreeNodeForCoords(boardTree, moveList[moveIndex].slice(0, moveList[moveIndex].length - 2));
       let currentBoard = treeNode;
       let winDepth = 0;
@@ -170,10 +171,21 @@ export function StateProvider({ children }) {
       }
       boardTree.numOfMovesPlayed = boardTree.numOfMovesPlayed + 1;
       getTreeNodeForCoords(boardTree, currentMove).wonBy = playerCurrent;
-      console.log(boardTree)
       boardTree.setActiveStatus(calculateShift([treeNode, currentMove[currentMove.length - 2], currentMove[currentMove.length - 1], winDepth]));
     }
-    console.log(boardTree);
+    return boardTree;
+  }
+  // ill be real i have no idea what is going on atp
+  // please help
+  const updateBoardTree = useCallback((moveList, boardTree) => {
+    setMoveList(moveList);
+    if (boardTree.numOfMovesPlayed > moveList.length) {
+      const wipedTree = new BoardTree(null, gameDimension, 0, 0);
+      boardTree = evaluateMovesOnBoardTree(moveList, wipedTree);
+    }
+    else {
+      boardTree = evaluateMovesOnBoardTree(moveList, boardTree);
+    }
     setBoardTree(_.cloneDeep(boardTree));
     return 0;
   }, [])
