@@ -33,8 +33,7 @@ export function Game() {
           setBoardTree(newBoardTree);
           updateBoardTree(respMoveList, newBoardTree);
         }
-        if ((jsonResponse.playerWhoRequestedSkip !== username && jsonResponse.playerWhoRequestedSkip !== '') && (username === jsonResponse.playerO || username === jsonResponse.playerX)) {
-          const skipConfirm = window.confirm(`${jsonResponse.playerWhoRequestedSkip} has requested a skip. Would you like to accept?`) ? username : '';
+        if ((jsonResponse.playerWhoRequestedUndo !== username && jsonResponse.playerWhoRequestedUndo !== '') && (username === jsonResponse.playerO || username === jsonResponse.playerX)) {
           fetch(pathUrl, {
             method: "PUT",
             headers: {
@@ -42,7 +41,20 @@ export function Game() {
             },
             body: JSON.stringify({
               action: 'undoMove',
-              playerWhoRequestedSkip: skipConfirm
+              playerWhoRequestedUndo: username,
+              confirmUndo: null
+            })
+          })
+          const undoConfirm = window.confirm(`${jsonResponse.playerWhoRequestedUndo} has requested a undo. Would you like to accept?`);
+          fetch(pathUrl, {
+            method: "PUT",
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              action: 'undoMove',
+              playerWhoRequestedUndo: username,
+              confirmUndo: undoConfirm
             })
           })
         }
@@ -142,6 +154,7 @@ export function StateProvider({ children }) {
   const [playerIdentifier, setPlayerIdentifier] = useState('');
   const [playerNames, setPlayerNames] = useState([]);
   const [gameDimension, setGameDimension] = useState(DEFAULT_DIM);
+  const [spectatorStatus, setSpectatorStatus] = useState(false);
   const pathUrl = useMemo(() => {
     return URL+'/'+gameId
   }, [gameId]);
@@ -192,9 +205,9 @@ export function StateProvider({ children }) {
 
   return (
     <StateContext.Provider value={{
-      moveList, currentPlayer, boardTree, previousMove, winDepth, gameStarted, username, gameId, playerIdentifier, playerNames, gameDimension, pathUrl,
+      moveList, currentPlayer, boardTree, previousMove, winDepth, gameStarted, username, gameId, playerIdentifier, playerNames, gameDimension, pathUrl, spectatorStatus,
       setMoveList, setBoardTree, setPreviousMove, setWinDepth, setGameStarted, setUsername, setGameId, setPlayerIdentifier, setPlayerNames, setGameDimension,
-      updateBoardTree
+      updateBoardTree, setSpectatorStatus
     }}>
       {children}
     </StateContext.Provider>

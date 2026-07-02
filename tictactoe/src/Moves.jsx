@@ -6,7 +6,7 @@ import { BoardTree } from "./util";
 import _ from "lodash";
 
 export function GameAutomation() {
-    const {setGameId, setPlayerIdentifier, setUsername, setCurrentPlayer, setGameDimension, setBoardTree} = useContext(StateContext)
+    const {setGameId, setPlayerIdentifier, setUsername, setCurrentPlayer, setGameDimension, setBoardTree, setSpectatorStatus} = useContext(StateContext)
 
     const createGame = useCallback(async () => {
         const gameDimension = prompt("dimension of game you want to create:");
@@ -48,6 +48,9 @@ export function GameAutomation() {
         console.log(jsonResponse.playerIdentifier)
         if (jsonResponse.error) {
             alert("Game does not exist vro.");
+        }
+        else if (jsonResponse.response === "game is full") {
+            setSpectatorStatus(true);
         }
         else {
             setPlayerIdentifier(jsonResponse.playerIdentifier);
@@ -110,8 +113,8 @@ export default function Moves() {
             },
             body: JSON.stringify({
                 action: 'undoMove',
-                playerWhoRequestedSkip: username,
-                confirmSkip: false
+                playerWhoRequestedUndo: username,
+                confirmUndo: null
             })
         })
     }
@@ -153,7 +156,7 @@ export default function Moves() {
                 )}
             </ol>
             <button onClick={undoMove}>
-                Undo Move
+                Request Undo Move
             </button>
             <button onClick={doMoves}>
                 setMoveList
