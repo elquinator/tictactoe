@@ -17,4 +17,4 @@ export const PLAYERS = ['X', 'O'];
 export const HOSTNAME = window.location.host.split(':')[0];
 export const PORT = 3030;
 export const PATH = "games";
-export const URL = `http://${HOSTNAME}:${PORT}/${PATH}`;
+export const URL = HOSTNAME === 'tictactoe.abra.ms' ? `//${HOSTNAME}/${PATH}` : `//${HOSTNAME}:${PORT}/${PATH}`;
