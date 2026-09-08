@@ -4,7 +4,7 @@ import Moves,{Premover,GameAutomation} from './Moves';
 import React, { cloneElement, createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
 import { GameInfo } from './GameInfo';
 import _ from "lodash";
-import { getTreeNodeForCoords, calculateShift, checkWin, State, BoardTree } from './util';
+import { getTreeNodeForCoords, calculateShift, checkWin, BoardTree, evaluateMovesOnBoardTree } from './util';
 import { PLAYERS, URL } from './constants';
 
 const DEFAULT_DIM = 3;
@@ -12,6 +12,7 @@ export const StateContext = createContext({
   moveList: [], currentPlayer: 'X', boardTree: new BoardTree(null, DEFAULT_DIM, 0, 0),
   previousMove: [], winDepth: 0, gameStarted: false, username: '', gameId: '', playerIdentifier: '', playerNames: []
 })
+
 
 export function Game() {
   const {boardTree, url, gameId, username, setPlayerNames, setGameStarted, moveList, setMoveList, 
@@ -78,7 +79,7 @@ export function Game() {
     }
   });
 
-  const handleMoveImpl = useCallback((event, treeNode, row, column) => {
+  const handleMoveImpl = useCallback( async (event, treeNode, row, column) => {
     //treeNode is always the parent board of the move played, not the move itself
     if (treeNode.children[row][column].wonBy != '') {
       alert("brotjer its takenm do you have eyeys");
@@ -93,7 +94,7 @@ export function Game() {
     const newMove = treeNode.getFullRoute([row, column]);
     const newMoveList = [...moveList, newMove];
     updateBoardTree(newMoveList, boardTree);
-    fetch(pathUrl, {
+    const response = await fetch(pathUrl, {
       method: "PUT",
       headers: {
         'Content-Type': 'application/json',
@@ -103,6 +104,18 @@ export function Game() {
         move: treeNode.getFullRoute([row, column]),
       })
     })
+    const jsonResponse = await response.json();
+    console.log(jsonResponse);
+    if (jsonResponse.error) {
+      // move is invalid server side
+      console.log("player cheated")
+
+      // undo move
+      newMoveList.pop()
+      updateBoardTree(newMoveList, boardTree);
+      alert("cheating is not acceptable.")
+      return;
+    }
   },[currentPlayer, boardTree, PLAYERS, moveList, gameId]);
 
   return (
@@ -161,33 +174,6 @@ export function StateProvider({ children }) {
   const currentPlayer = useMemo(() => {
     return (PLAYERS[moveList.length%2])
   }, [moveList])
-  const evaluateMovesOnBoardTree = (moveList, boardTree) => {
-    for (let moveIndex = boardTree.numOfMovesPlayed; moveIndex < moveList.length; moveIndex++) {
-      const playerCurrent = (moveIndex % 2 === 0) ? 'X' : 'O';
-      const currentMove = moveList[moveIndex];
-      const treeNode = getTreeNodeForCoords(boardTree, moveList[moveIndex].slice(0, moveList[moveIndex].length - 2));
-      let currentBoard = treeNode;
-      let winDepth = 0;
-      let coords = [];
-      currentBoard.children[currentMove[currentMove.length - 2]][currentMove[currentMove.length - 1]].wonBy = playerCurrent;
-      while (checkWin(currentBoard)) {
-        coords = [currentBoard.row, currentBoard.column];
-        if (currentBoard.parent == null) {
-          boardTree.wonBy = playerCurrent;
-          alert(`${playerCurrent} won the game!`);
-          break;
-        }
-        currentBoard = currentBoard.parent;
-        //this line has changed according to "new standards":
-        currentBoard.children[coords[0]][coords[1]].wonBy = playerCurrent;
-        winDepth++;
-      }
-      boardTree.numOfMovesPlayed = boardTree.numOfMovesPlayed + 1;
-      getTreeNodeForCoords(boardTree, currentMove).wonBy = playerCurrent;
-      boardTree.setActiveStatus(calculateShift([treeNode, currentMove[currentMove.length - 2], currentMove[currentMove.length - 1], winDepth]));
-    }
-    return boardTree;
-  }
   // ill be real i have no idea what is going on atp
   // please help
   const updateBoardTree = useCallback((moveList, boardTree) => {

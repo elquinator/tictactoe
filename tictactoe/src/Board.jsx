@@ -1,5 +1,6 @@
 import { useContext } from "react";
 import { StateContext } from "./App";
+import _ from "lodash";
 import O from "./O.png"
 import X from "./X.png"
 const IMAGES = {
@@ -8,7 +9,7 @@ const IMAGES = {
 }
 
 export default function Board(props) {
-    const { dimension, winDepth, previousMove, playerIdentifier, currentPlayer } = useContext(StateContext)
+    const { gameDimension, winDepth, previousMove, playerIdentifier, currentPlayer } = useContext(StateContext)
     const rows=[0,1,2];
     const columns=[0,1,2];
     const letters=['A','B','C']
@@ -27,7 +28,7 @@ export default function Board(props) {
             <table>
                 {rows.map((row) => (
                     <tr>
-                        {props.depth == dimension ? <h1 style={{ display: "table-cell", height:"100%", verticalAlign: "middle", color:"rgb(134, 0, 0)"}}>{letters[row]}</h1>:''}
+                        {props.depth == gameDimension ? <h1 style={{ display: "table-cell", height:"100%", verticalAlign: "middle", color:"rgb(134, 0, 0)"}}>{letters[row]}</h1>:''}
                         {columns.map((column)=>(
                             <td id={"cell-" + "-" + props.depth + "-" + props.row + "-" + props.column + "-" + row + "-" + column} style={{
                                 borderBottom: row<2? `${props.depth*3+1}px solid black`:'',
@@ -39,7 +40,7 @@ export default function Board(props) {
                                 {props.depth>1 && (
                                     <>
                                         <Board depth={props.depth-1} row={row} column={column} handleMove={props.handleMove}
-                                         treeNode={props.treeNode.children[row][column]} winDepth={winDepth} previousMove={previousMove} dimension={dimension}
+                                         treeNode={props.treeNode.children[row][column]} winDepth={winDepth} previousMove={previousMove}
                                          style= {{position: "absolute"}} />
                                         {props.depth>0 && (<div style={{
                                             width: "100%",
@@ -70,7 +71,7 @@ export default function Board(props) {
                                         {props.treeNode.children[row][column].wonBy}
                                     </button>
                                 )}
-                                {row == 2 && props.depth == dimension ? <h1 style={{color:"rgb(134, 0, 0)"}}>{column+1}</h1> : ''}
+                                {row == 2 && props.depth == gameDimension ? <h1 style={{color:"rgb(134, 0, 0)"}}>{column+1}</h1> : ''}
                             </td>
                         ))}
                     </tr>

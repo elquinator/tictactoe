@@ -8,13 +8,14 @@ export class BoardTree {
         this.wonBy=''
         this.isActive = true
         this.numOfMovesPlayed = 0;
-        if (depth==0) {
+        if (depth<=0) {
           return 0
         }
         this.children=[]
         for (var child1=0;child1<3;child1++) {
           var temp=[]
-          for (var child2=0;child2<3;child2++) {
+          for (var child2 = 0; child2 < 3; child2++) {
+            console.log(depth)
             temp.push(new BoardTree(this,depth-1,child1,child2))
           }
           this.children.push(temp)
@@ -30,6 +31,7 @@ export class BoardTree {
         return route
     }
   adjustActiveStatus(shiftedRoute) {
+    // this only adjusts boards of depth 1 and above so checking whether move is valid requires check of treeNode.wonBy aswell
     //  target board is board to go to in reference to the rules of ultimate tictactoe
     const targetBoard = this.parent === null ? null : this.parent.children[shiftedRoute[shiftedRoute.length - (this.depth * 2)]][shiftedRoute[shiftedRoute.length - (this.depth * 2) + 1]];
     // if i am the top layer board, i am active 
@@ -96,3 +98,32 @@ export function calculateShift(previousMove) {
   return pre.concat(suf);
 }
 
+export const evaluateMovesOnBoardTree = (moveList, boardTree, serverQuery = false) => {
+  for (let moveIndex = boardTree.numOfMovesPlayed; moveIndex < moveList.length; moveIndex++) {
+    const playerCurrent = (moveIndex % 2 === 0) ? 'X' : 'O';
+    const currentMove = moveList[moveIndex];
+    const treeNode = getTreeNodeForCoords(boardTree, moveList[moveIndex].slice(0, moveList[moveIndex].length - 2));
+    let currentBoard = treeNode;
+    let winDepth = 0;
+    let coords = [];
+    currentBoard.children[currentMove[currentMove.length - 2]][currentMove[currentMove.length - 1]].wonBy = playerCurrent;
+    while (checkWin(currentBoard)) {
+      coords = [currentBoard.row, currentBoard.column];
+      if (currentBoard.parent == null) {
+        boardTree.wonBy = playerCurrent;
+        alert(`${playerCurrent} won the game!`);
+        break;
+      }
+      currentBoard = currentBoard.parent;
+      //this line has changed according to "new standards":
+      currentBoard.children[coords[0]][coords[1]].wonBy = playerCurrent;
+      winDepth++;
+    }
+    boardTree.numOfMovesPlayed = boardTree.numOfMovesPlayed + 1;
+    getTreeNodeForCoords(boardTree, currentMove).wonBy = playerCurrent;
+    if (!serverQuery) {
+      boardTree.setActiveStatus(calculateShift([treeNode, currentMove[currentMove.length - 2], currentMove[currentMove.length - 1], winDepth]));
+    }
+  }
+  return boardTree;
+}

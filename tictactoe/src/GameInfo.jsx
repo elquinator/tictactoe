@@ -7,7 +7,6 @@ export function GameInfo(props) {
         <div>
             <p style={{
                 fontSize:"25px",
-                position:"absolute",
             }}>
                 vsync: ON<br />
                 fps: 165<br/>

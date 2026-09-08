@@ -9,7 +9,7 @@ export function GameAutomation() {
     const {setGameId, setPlayerIdentifier, setUsername, setCurrentPlayer, setGameDimension, setBoardTree, setSpectatorStatus} = useContext(StateContext)
 
     const createGame = useCallback(async () => {
-        const gameDimension = prompt("dimension of game you want to create:");
+        const gameDimension = parseInt(prompt("dimension of game you want to create:"));
         setGameDimension(gameDimension);
         setBoardTree(_.cloneDeep(new BoardTree(null, gameDimension, 0, 0)));
         const response = await fetch(URL, {
