@@ -9,7 +9,7 @@ const IMAGES = {
 }
 
 export default function Board(props) {
-    const { gameDimension, winDepth, previousMove, playerIdentifier, currentPlayer } = useContext(StateContext)
+    const { gameDimension, winDepth, playerIdentifier, currentPlayer, moveList } = useContext(StateContext)
     const rows=[0,1,2];
     const columns=[0,1,2];
     const letters=['A','B','C']
@@ -19,7 +19,7 @@ export default function Board(props) {
         wonByFlag=true;
     }
     return (
-        <div id={"board-" + props.depth + "-" + props.row + "-" + props.column} style={{
+        <div id={"board-" + props.depth + "-" + props.row + "-" + props.column } style={{
             padding: `${(props.depth+1)*15}px`,
             border: (boardActiveFlag && currentPlayer === playerIdentifier) ? "1px solid green" : "",
             backgroundColor: (boardActiveFlag && currentPlayer === playerIdentifier) ? "green" : "#ddd",
@@ -40,7 +40,7 @@ export default function Board(props) {
                                 {props.depth>1 && (
                                     <>
                                         <Board depth={props.depth-1} row={row} column={column} handleMove={props.handleMove}
-                                         treeNode={props.treeNode.children[row][column]} winDepth={winDepth} previousMove={previousMove}
+                                         treeNode={props.treeNode.children[row][column]} winDepth={winDepth}
                                          style= {{position: "absolute"}} />
                                         {props.depth>0 && (<div style={{
                                             width: "100%",
@@ -66,8 +66,9 @@ export default function Board(props) {
                                         height: "45px",
                                         border: 0,
                                         margin: "2px",
-                                        fontSize: "30px"
-                                        }} disabled = {!props.treeNode.children[row][column].isActive}>
+                                        fontSize: "30px",
+                                        backgroundColor: moveList.length > 0 && currentPlayer === playerIdentifier && (moveList[moveList.length-1].join('-') === props.treeNode.getFullRoute([row, column]).join('-')) ? "rgb(252, 252, 135)" : ""
+                                        }} disabled={!props.treeNode.children[row][column].isActive}>
                                         {props.treeNode.children[row][column].wonBy}
                                     </button>
                                 )}

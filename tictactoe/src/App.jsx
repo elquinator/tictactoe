@@ -10,13 +10,13 @@ import { PLAYERS, URL } from './constants';
 const DEFAULT_DIM = 3;
 export const StateContext = createContext({
   moveList: [], currentPlayer: 'X', boardTree: new BoardTree(null, DEFAULT_DIM, 0, 0),
-  previousMove: [], winDepth: 0, gameStarted: false, username: '', gameId: '', playerIdentifier: '', playerNames: []
+  winDepth: 0, gameStarted: false, username: '', gameId: '', playerIdentifier: '', playerNames: []
 })
 
 
 export function Game() {
   const {boardTree, url, gameId, username, setPlayerNames, setGameStarted, moveList, setMoveList, 
-    currentPlayer, setWinDepth, setPreviousMove, setBoardTree, previousMove, gameStarted, playerNames, playerIdentifier,
+    currentPlayer, setWinDepth, setBoardTree, gameStarted, playerNames, playerIdentifier,
     gameDimension, pathUrl, updateBoardTree, setGameDimension } = useContext(StateContext)
   
   useEffect(() => {
@@ -158,7 +158,6 @@ export function Game() {
 export function StateProvider({ children }) {
   const [moveList, setMoveList] = useState([]);
   const [boardTree, setBoardTree] = useState(new BoardTree(null,DEFAULT_DIM,0,0));
-  const [previousMove, setPreviousMove] = useState([]);
   const [winDepth, setWinDepth] = useState(0);
   const [gameStarted, setGameStarted] = useState(false);
   const [username, setUsername] = useState('');
@@ -191,8 +190,8 @@ export function StateProvider({ children }) {
 
   return (
     <StateContext.Provider value={{
-      moveList, currentPlayer, boardTree, previousMove, winDepth, gameStarted, username, gameId, playerIdentifier, playerNames, gameDimension, pathUrl, spectatorStatus,
-      setMoveList, setBoardTree, setPreviousMove, setWinDepth, setGameStarted, setUsername, setGameId, setPlayerIdentifier, setPlayerNames, setGameDimension,
+      moveList, currentPlayer, boardTree, winDepth, gameStarted, username, gameId, playerIdentifier, playerNames, gameDimension, pathUrl, spectatorStatus,
+      setMoveList, setBoardTree, setWinDepth, setGameStarted, setUsername, setGameId, setPlayerIdentifier, setPlayerNames, setGameDimension,
       updateBoardTree, setSpectatorStatus
     }}>
       {children}

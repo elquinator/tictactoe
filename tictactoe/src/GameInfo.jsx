@@ -4,9 +4,13 @@ import { StateContext } from "./App"
 export function GameInfo(props) {
     const {gameId, playerNames} = useContext(StateContext)
     return (
-        <div>
+        <div style={{
+            position: "relative",
+            clear: "right",
+            display: "block"
+        }}>
             <p style={{
-                fontSize:"25px",
+                fontSize: "25px"
             }}>
                 vsync: ON<br />
                 fps: 165<br/>
