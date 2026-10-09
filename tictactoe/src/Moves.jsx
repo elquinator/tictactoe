@@ -58,6 +58,45 @@ export function GameAutomation() {
             setGameId(gameId);
         }
     }, []);
+    const startComputerGame = useCallback(async () => {
+        const gameDimension = parseInt(prompt("dimension of game you want to create:"));
+        setGameDimension(gameDimension);
+        setBoardTree(_.cloneDeep(new BoardTree(null, gameDimension, 0, 0)));
+        const response2 = (await fetch(URL, {
+            method: "POST",
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                gameDimension: gameDimension
+            })
+        }))
+        const jsonResponse2 = await response2.json();
+        const gameId2 = jsonResponse2.gameID;
+        let username = prompt("Username:");
+        username = username === '' ? "unnamedLoser" : username;
+        const response = await fetch(URL + '/' + gameId2, {
+            method: "PUT",
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                action: 'playComputer',
+                playerName: username
+            })
+        })
+        const jsonResponse = await response.json();
+        console.log("Got response ", jsonResponse);
+        console.log(jsonResponse.playerIdentifier)
+        if (jsonResponse.error) {
+            alert("Game does not exist vro.");
+        }
+        else {
+            setPlayerIdentifier(jsonResponse.playerIdentifier);
+            setUsername(username);
+            setGameId(gameId2);
+        }
+    }, []);
 
     return (
         <div style={{
@@ -96,6 +135,15 @@ export function GameAutomation() {
                     fontSize: "20px"
                 }}>
                     join game
+                </button>
+            </div>
+            <div>
+                <button onClick={startComputerGame} style={{
+                    width: "250px",
+                    height: "50px",
+                    fontSize: "20px"
+                }}>
+                    play bot
                 </button>
             </div>
         </div>
