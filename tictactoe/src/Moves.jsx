@@ -1,7 +1,7 @@
 import {useCallback, useContext} from "react";
 import { debugLog, StateContext } from "./App";
 import logo from "./tictactoelogo.png"
-import { URL } from "./constants";
+import { URL, DEBUGMODE } from "./constants";
 import { BoardTree } from "./util";
 import _ from "lodash";
 
@@ -62,7 +62,7 @@ export function GameAutomation() {
         const gameDimension = parseInt(prompt("dimension of game you want to create:"));
         setGameDimension(gameDimension);
         setBoardTree(_.cloneDeep(new BoardTree(null, gameDimension, 0, 0)));
-        const response2 = (await fetch(URL, {
+        const CreateResponse = (await fetch(URL, {
             method: "POST",
             headers: {
                 'Content-Type': 'application/json',
@@ -71,11 +71,11 @@ export function GameAutomation() {
                 gameDimension: gameDimension
             })
         }))
-        const jsonResponse2 = await response2.json();
-        const gameId2 = jsonResponse2.gameID;
+        const jsonCreateResponse = await CreateResponse.json();
+        const gameID = jsonCreateResponse.gameID;
         let username = prompt("Username:");
         username = username === '' ? "unnamedLoser" : username;
-        const response = await fetch(URL + '/' + gameId2, {
+        const joinResponse = await fetch(URL + '/' + gameID, {
             method: "PUT",
             headers: {
                 'Content-Type': 'application/json',
@@ -85,16 +85,16 @@ export function GameAutomation() {
                 playerName: username
             })
         })
-        const jsonResponse = await response.json();
-        console.log("Got response ", jsonResponse);
-        console.log(jsonResponse.playerIdentifier)
-        if (jsonResponse.error) {
+        const jsonJoinResponse = await joinResponse.json();
+        console.log("Got response ", jsonJoinResponse);
+        console.log(jsonJoinResponse.playerIdentifier)
+        if (jsonJoinResponse.error) {
             alert("Game does not exist vro.");
         }
         else {
-            setPlayerIdentifier(jsonResponse.playerIdentifier);
+            setPlayerIdentifier(jsonJoinResponse.playerIdentifier);
             setUsername(username);
-            setGameId(gameId2);
+            setGameId(gameID);
         }
     }, []);
 
@@ -203,12 +203,14 @@ export default function Moves() {
                     )}</li>
                 )}
             </ol>
-            <button onClick={undoMove}>
-                Request Undo Move
-            </button>
-            <button onClick={doMoves}>
-                setMoveList
-            </button>
+            {DEBUGMODE && <div>
+                <button onClick={undoMove}>
+                    Request Undo Move
+                </button>
+                <button onClick={doMoves}>
+                    setMoveList
+                </button>
+            </div>}
         </div>
     )
 }

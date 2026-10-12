@@ -175,14 +175,14 @@ export function StateProvider({ children }) {
   }, [moveList])
   // ill be real i have no idea what is going on atp
   // please help
-  const updateBoardTree = useCallback((moveList, boardTree) => {
-    setMoveList(moveList);
-    if (boardTree.numOfMovesPlayed > moveList.length) {
+  const updateBoardTree = useCallback((respMoveList, boardTree) => {
+    setMoveList(respMoveList);
+    if (moveList.length > respMoveList.length) {
       const wipedTree = new BoardTree(null, gameDimension, 0, 0);
-      boardTree = evaluateMovesOnBoardTree(moveList, wipedTree);
+      boardTree = evaluateMovesOnBoardTree(moveList, respMoveList, wipedTree);
     }
     else {
-      boardTree = evaluateMovesOnBoardTree(moveList, boardTree);
+      boardTree = evaluateMovesOnBoardTree(moveList, respMoveList, boardTree);
     }
     setBoardTree(_.cloneDeep(boardTree));
     return 0;

@@ -7,6 +7,8 @@ export const NS_DEBUG_NAMES = {
     "ERROR": true,
 };
 
+export const DEBUGMODE = true;
+
 export const debugLog = (namespace, message, obj = null) => {
     if (NS_DEBUG_NAMES[namespace]) {
         console.log(`[${namespace}] ${message}`, obj);
