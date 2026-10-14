@@ -1,7 +1,7 @@
 import { useContext } from "react"
 import { StateContext } from "./App"
 
-export function GameInfo(props) {
+export function GameInfo() {
     const {gameId, playerNames} = useContext(StateContext)
     return (
         <div style={{

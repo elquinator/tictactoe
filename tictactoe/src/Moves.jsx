@@ -161,8 +161,7 @@ export default function Moves() {
             },
             body: JSON.stringify({
                 action: 'undoMove',
-                playerWhoRequestedUndo: username,
-                confirmUndo: null
+                playerWhoRequestedUndo: username
             })
         })
     }

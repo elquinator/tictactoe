@@ -1,11 +1,9 @@
 import './App.css';
-import Board from './Board';
-import Moves,{Premover,GameAutomation} from './Moves';
-import React, { cloneElement, createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
-import { GameInfo } from './GameInfo';
+import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
 import _ from "lodash";
-import { getTreeNodeForCoords, calculateShift, checkWin, BoardTree, evaluateMovesOnBoardTree } from './util';
+import { BoardTree, evaluateMovesOnBoardTree, getAvailableMoves } from './util';
 import { PLAYERS, URL } from './constants';
+import { EndGameScreen, GameActiveScreen, WaitingForPlayerScreen } from './GameStatusScreens';
 
 const DEFAULT_DIM = 3;
 export const StateContext = createContext({
@@ -15,14 +13,18 @@ export const StateContext = createContext({
 
 
 export function Game() {
-  const {boardTree, url, gameId, username, setPlayerNames, setGameStarted, moveList, setMoveList, 
-    currentPlayer, setWinDepth, setBoardTree, gameStarted, playerNames, playerIdentifier,
-    gameDimension, pathUrl, updateBoardTree, setGameDimension } = useContext(StateContext)
+  let pauseFetches = false
+  const {boardTree, gameId, username, setPlayerNames, playerNames, setGameStarted, moveList, 
+    currentPlayer, setBoardTree, gameStarted, playerIdentifier, pathUrl, updateBoardTree,
+    setGameDimension, gameEnded, setPauseFetches } = useContext(StateContext)
   
   useEffect(() => {
     const moveInterval = setInterval(async () => {
+      if (pauseFetches) {
+        return;
+      }
       //set necessary info for game after start
-      if (username !== '' && gameId !== '') {
+      if (username !== '' && gameId !== '' && !pauseFetches) {
         const response = await fetch(pathUrl, { method: "GET" });
         const jsonResponse = await response.json();
         const respMoveList = jsonResponse.moves;
@@ -30,36 +32,29 @@ export function Game() {
           const newBoardTree = _.cloneDeep(new BoardTree(null, jsonResponse.gameDimension, 0, 0));
           setPlayerNames([jsonResponse.playerX, jsonResponse.playerO]);
           setGameStarted(jsonResponse.gameStarted);
-          setGameDimension(jsonResponse.gameDimension);  
+          setGameDimension(jsonResponse.gameDimension);
           setBoardTree(newBoardTree);
           updateBoardTree(respMoveList, newBoardTree);
         }
-        if ((jsonResponse.playerWhoRequestedUndo !== username && jsonResponse.playerWhoRequestedUndo !== '') && (username === jsonResponse.playerO || username === jsonResponse.playerX)) {
-          fetch(pathUrl, {
+        else if (jsonResponse.playerWhoRequestedUndo === playerNames[playerIdentifier === 'X' ? 1 : 0]) {
+          pauseFetches = true;
+          const undoConfirm = window.confirm(`${jsonResponse.playerWhoRequestedUndo} has requested an undo. Would you like to accept it?`)
+          pauseFetches = false;
+          await fetch(pathUrl, {
             method: "PUT",
             headers: {
-              'Content-Type': 'application/json',
+              'Content-Type': 'application/json'
             },
             body: JSON.stringify({
               action: 'undoMove',
-              playerWhoRequestedUndo: username,
-              confirmUndo: null
-            })
-          })
-          const undoConfirm = window.confirm(`${jsonResponse.playerWhoRequestedUndo} has requested a undo. Would you like to accept?`);
-          fetch(pathUrl, {
-            method: "PUT",
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-              action: 'undoMove',
-              playerWhoRequestedUndo: username,
-              confirmUndo: undoConfirm
+              playerWhoRequestedUndo: undoConfirm ? `${playerNames[playerIdentifier === 'X' ? 0 : 1]}` : ''
             })
           })
         }
         else if (respMoveList.length !== moveList.length) {
+          console.log("cheacking move lists")
+          console.log(moveList)
+          console.log(respMoveList)
           updateBoardTree(respMoveList, boardTree);
         }
       }
@@ -67,7 +62,7 @@ export function Game() {
     return () => {
       clearInterval(moveInterval);
     }
-  }, [gameStarted, moveList, username, gameId, setGameStarted]);
+  }, [gameStarted, moveList, username, gameId, setGameStarted, pauseFetches]);
 
 
   const handleMove = useCallback((event, treeNode, row, column) => {
@@ -120,37 +115,11 @@ export function Game() {
 
   return (
     <div className="App" style={{ position: "relative", fontFamily: "monospace" }}>
-      <div style={{
-          backgroundColor: "#ddd"
-        }}>
-        {gameStarted&&(<h1>
-          {playerNames[PLAYERS.indexOf(currentPlayer)]} turn ({playerIdentifier===currentPlayer?"make a move":"waiting for move from other guy"})
-        </h1>)}
-      </div>
-      <div style={{
-        display:"flex"
-      }}>
-        {gameStarted ? <Moves/>:''}
-        {false&&gameStarted ? <Premover/>:''}
-        {username === '' ? <GameAutomation/>:''}
-        {username !== '' && gameStarted && (
-          <>
-            <GameInfo/>
-            <Board depth={gameDimension} row={0} column={0} handleMove={handleMove} treeNode={boardTree} />
-          </>
-        )}
-        {username !== '' && !gameStarted && (
-          <div style={{
-            width:"100%",
-            alignContent: "center"
-          }}>
-            <h1>username: {username}</h1>
-            <h1>player: {playerIdentifier}</h1>
-            <h2>waiting for another player...</h2>
-            <p1>gameID: {gameId}</p1>
-          </div>
-        )}
-      </div>
+      <>
+        {gameStarted && (<GameActiveScreen handleMove={handleMove} />)}
+        {!gameStarted && (<WaitingForPlayerScreen/>)}
+        {gameEnded && (<EndGameScreen/>)}
+      </>
     </div>
   );
 }
@@ -160,6 +129,8 @@ export function StateProvider({ children }) {
   const [boardTree, setBoardTree] = useState(new BoardTree(null,DEFAULT_DIM,0,0));
   const [winDepth, setWinDepth] = useState(0);
   const [gameStarted, setGameStarted] = useState(false);
+  const [gameEnded, setGameEnded] = useState(false);
+  const [gameWinner, setGameWinner] = useState('');
   const [username, setUsername] = useState('');
   const [gameId, setGameId] = useState('');
   //this one never actually changes, take issues up with the Big Man
@@ -167,6 +138,7 @@ export function StateProvider({ children }) {
   const [playerNames, setPlayerNames] = useState([]);
   const [gameDimension, setGameDimension] = useState(DEFAULT_DIM);
   const [spectatorStatus, setSpectatorStatus] = useState(false);
+  const [pauseFetches, setPauseFetches] = useState(false);
   const pathUrl = useMemo(() => {
     return URL+'/'+gameId
   }, [gameId]);
@@ -176,23 +148,32 @@ export function StateProvider({ children }) {
   // ill be real i have no idea what is going on atp
   // please help
   const updateBoardTree = useCallback((respMoveList, boardTree) => {
-    setMoveList(respMoveList);
+    console.log("movelists")
+    console.log(moveList)
+    console.log(respMoveList)
     if (moveList.length > respMoveList.length) {
+      console.log("resetting move list")
       const wipedTree = new BoardTree(null, gameDimension, 0, 0);
-      boardTree = evaluateMovesOnBoardTree(moveList, respMoveList, wipedTree);
+      boardTree = evaluateMovesOnBoardTree([], respMoveList, wipedTree);
     }
     else {
       boardTree = evaluateMovesOnBoardTree(moveList, respMoveList, boardTree);
     }
+    if (boardTree.wonBy !== '' || getAvailableMoves(boardTree).length === 0) {
+      setGameEnded(true);
+      setGameWinner(boardTree.wonBy !== '' ? boardTree.wonBy : '-');
+    }
+    console.log('stti222222ng movelist')
+    setMoveList(respMoveList);
     setBoardTree(_.cloneDeep(boardTree));
     return 0;
-  }, [])
+  }, [moveList])
 
   return (
     <StateContext.Provider value={{
-      moveList, currentPlayer, boardTree, winDepth, gameStarted, username, gameId, playerIdentifier, playerNames, gameDimension, pathUrl, spectatorStatus,
+      moveList, currentPlayer, boardTree, winDepth, gameStarted, username, gameId, playerIdentifier, playerNames, gameDimension, pathUrl, spectatorStatus, gameEnded, gameWinner, pauseFetches,
       setMoveList, setBoardTree, setWinDepth, setGameStarted, setUsername, setGameId, setPlayerIdentifier, setPlayerNames, setGameDimension,
-      updateBoardTree, setSpectatorStatus
+      updateBoardTree, setSpectatorStatus, setPauseFetches
     }}>
       {children}
     </StateContext.Provider>

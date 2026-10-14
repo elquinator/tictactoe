@@ -7,13 +7,13 @@ export class BoardTree {
         this.children=0
         this.wonBy=''
         this.isActive = true
-        if (depth<=0) {
+        if (depth==0) {
           return 0
         }
         this.children=[]
         for (var child1=0;child1<3;child1++) {
           var temp=[]
-          for (var child2 = 0; child2 < 3; child2++) {
+          for (var child2=0;child2<3;child2++) {
             temp.push(new BoardTree(this,depth-1,child1,child2))
           }
           this.children.push(temp)
@@ -32,17 +32,17 @@ export class BoardTree {
     // this only adjusts boards of depth 1 and above so checking whether move is valid requires check of treeNode.wonBy aswell
     //  target board is board to go to in reference to the rules of ultimate tictactoe
     const targetBoard = this.parent === null ? null : this.parent.children[shiftedRoute[shiftedRoute.length - (this.depth * 2)]][shiftedRoute[shiftedRoute.length - (this.depth * 2) + 1]];
+    // if i am a taken board, i am not active | this has been decided to have the most priority of the checks
+    if (this.wonBy !== '') {
+      this.isActive=false
+    }
     // if i am the top layer board, i am active 
-    if (this.parent == null) {
+    else if (this.parent == null) {
       this.isActive = true;
     }
     // if my parent is not active, i cannot be active
     else if (this.parent.isActive === false) {
       this.isActive = false;
-    }
-    // if i am a taken board, i am not active
-    else if (this.wonBy !== '') {
-      this.isActive=false
     }
     // if target board is already won or fully taken, allow any board on same layer to be active except the one that is fully taken or won  
     else if (targetBoard.wonBy!=='' || (targetBoard.children.every((row) => {return row.every((board) => {return board.wonBy !== ''})}) && !(this.children.every((row) => {return row.every((board) => {return board.wonBy !== ''})})))) {
@@ -76,10 +76,6 @@ export function checkWin(toCheck) {
 }
 
 export const getTreeNodeForCoords = (boardTreeRoot, coordinates) => {
-  //console.log("this is the board tree passed in")
-  //console.log(boardTreeRoot)
-  //console.log("COORDS::")
-  //console.log(coordinates)
     if (coordinates.length>0) {
         return getTreeNodeForCoords(boardTreeRoot.children[coordinates[0]][coordinates[1]], coordinates.slice(2));
     } else {
@@ -96,31 +92,50 @@ export function calculateShift(previousMove) {
   return pre.concat(suf);
 }
 
+export const evaluateMoveOnBoardTree = (playerCurrent, currentMove, boardTree, serverQuery = false) => {
+  const treeNode = getTreeNodeForCoords(boardTree, currentMove.slice(0, currentMove.length - 2));
+  let currentBoard = treeNode;
+  let winDepth = 0;
+  let coords = [];
+  currentBoard.children[currentMove[currentMove.length - 2]][currentMove[currentMove.length - 1]].wonBy = playerCurrent;
+  while (checkWin(currentBoard)) {
+    coords = [currentBoard.row, currentBoard.column];
+    if (currentBoard.parent == null) {
+      boardTree.wonBy = playerCurrent;
+      //alert(`${playerCurrent} won the game!`);
+      break;
+    }
+    currentBoard = currentBoard.parent;
+    //this line has changed according to "new standards":
+    currentBoard.children[coords[0]][coords[1]].wonBy = playerCurrent;
+    winDepth++;
+  }
+  getTreeNodeForCoords(boardTree, currentMove).wonBy = playerCurrent;
+  if (!serverQuery) {
+    boardTree.setActiveStatus(calculateShift([treeNode, currentMove[currentMove.length - 2], currentMove[currentMove.length - 1], winDepth]));
+  }
+}
+
 export const evaluateMovesOnBoardTree = (localMoveList, moveList, boardTree, serverQuery = false) => {
   for (let moveIndex = localMoveList.length; moveIndex < moveList.length; moveIndex++) {
     const playerCurrent = (moveIndex % 2 === 0) ? 'X' : 'O';
-    const currentMove = moveList[moveIndex];
-    const treeNode = getTreeNodeForCoords(boardTree, moveList[moveIndex].slice(0, moveList[moveIndex].length - 2));
-    let currentBoard = treeNode;
-    let winDepth = 0;
-    let coords = [];
-    currentBoard.children[currentMove[currentMove.length - 2]][currentMove[currentMove.length - 1]].wonBy = playerCurrent;
-    while (checkWin(currentBoard)) {
-      coords = [currentBoard.row, currentBoard.column];
-      if (currentBoard.parent == null) {
-        boardTree.wonBy = playerCurrent;
-        alert(`${playerCurrent} won the game!`);
-        break;
-      }
-      currentBoard = currentBoard.parent;
-      //this line has changed according to "new standards":
-      currentBoard.children[coords[0]][coords[1]].wonBy = playerCurrent;
-      winDepth++;
-    }
-    getTreeNodeForCoords(boardTree, currentMove).wonBy = playerCurrent;
-    if (!serverQuery) {
-      boardTree.setActiveStatus(calculateShift([treeNode, currentMove[currentMove.length - 2], currentMove[currentMove.length - 1], winDepth]));
-    }
+    evaluateMoveOnBoardTree(playerCurrent, moveList[moveIndex], boardTree, serverQuery = false)
   }
   return boardTree;
+}
+
+export function getAvailableMoves(board, moves = []) {
+    if (board.depth === 0 && board.wonBy === '') {
+        moves.push(board.parent.getFullRoute([board.row, board.column]))
+    }
+    else {
+        for (let row in board.children) {
+            for (let column in board.children[row]) {
+                if (board.children[row][column].isActive) {
+                    getAvailableMoves(board.children[row][column], moves)
+                }
+            }
+        }
+    }
+    return moves;
 }
