@@ -7,7 +7,7 @@ export const NS_DEBUG_NAMES = {
     "ERROR": true,
 };
 
-export const DEBUGMODE = true;
+export const DEBUGMODE = false;
 
 export const debugLog = (namespace, message, obj = null) => {
     if (NS_DEBUG_NAMES[namespace]) {
@@ -19,4 +19,4 @@ export const PLAYERS = ['X', 'O'];
 export const HOSTNAME = window.location.host.split(':')[0];
 export const PORT = 3030;
 export const PATH = "games";
-export const URL = HOSTNAME === 'tictactoe.abra.ms' ? `//${HOSTNAME}/${PATH}` : `//${HOSTNAME}:${PORT}/${PATH}`;
+export const HOSTURL = HOSTNAME === 'tictactoe.abra.ms' ? `//${HOSTNAME}/${PATH}` : `//${HOSTNAME}:${PORT}/${PATH}`;

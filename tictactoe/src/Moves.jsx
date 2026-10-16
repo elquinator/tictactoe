@@ -1,102 +1,46 @@
 import {useCallback, useContext} from "react";
 import { debugLog, StateContext } from "./App";
 import logo from "./tictactoelogo.png"
-import { URL, DEBUGMODE } from "./constants";
+import { HOSTURL, DEBUGMODE } from "./constants";
 import { BoardTree } from "./util";
 import _ from "lodash";
 
-export function GameAutomation() {
-    const {setGameId, setPlayerIdentifier, setUsername, setCurrentPlayer, setGameDimension, setBoardTree, setSpectatorStatus} = useContext(StateContext)
+export function MainMenu() {
+    const { setUsername, setGameDimension, setBoardTree, setButtonContext, setIsInfoRecieved } = useContext(StateContext)
 
-    const createGame = useCallback(async () => {
+    function getAndSetGameDimension() {
         const gameDimension = parseInt(prompt("dimension of game you want to create:"));
         setGameDimension(gameDimension);
         setBoardTree(_.cloneDeep(new BoardTree(null, gameDimension, 0, 0)));
-        const response = await fetch(URL, {
-            method: "POST",
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-                gameDimension: gameDimension
-            })
-        });
-        const jsonResponse = await response.json();
-        const gameId = jsonResponse.gameID;
-        //setGameId(gameId);
-        joinGame(gameId);
-    }, []);
+    }
 
-    const joinGame = useCallback(async (gameId) => {
-        if (typeof(gameId)!=="string") {
-            gameId = prompt("gameID of game youre trying to join:");
-        }
+    function getAndSetUsername() {
         let username = prompt("Username:");
         username = username === '' ? "unnamedLoser" : username;
-        const response = await fetch(URL+'/'+gameId, {
-            method: "PUT",
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-                action: 'join',
-                playerName: username
-            })
-        });
-        const jsonResponse = await response.json();
-        console.log("Got response ", jsonResponse);
-        console.log(jsonResponse.playerIdentifier)
-        if (jsonResponse.error) {
-            alert("Game does not exist vro.");
-        }
-        else if (jsonResponse.response === "game is full") {
-            setSpectatorStatus(true);
-        }
-        else {
-            setPlayerIdentifier(jsonResponse.playerIdentifier);
-            setUsername(username);
-            setGameId(gameId);
-        }
-    }, []);
-    const startComputerGame = useCallback(async () => {
-        const gameDimension = parseInt(prompt("dimension of game you want to create:"));
-        setGameDimension(gameDimension);
-        setBoardTree(_.cloneDeep(new BoardTree(null, gameDimension, 0, 0)));
-        const CreateResponse = (await fetch(URL, {
-            method: "POST",
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-                gameDimension: gameDimension
-            })
-        }))
-        const jsonCreateResponse = await CreateResponse.json();
-        const gameID = jsonCreateResponse.gameID;
-        let username = prompt("Username:");
-        username = username === '' ? "unnamedLoser" : username;
-        const joinResponse = await fetch(URL + '/' + gameID, {
-            method: "PUT",
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-                action: 'playComputer',
-                playerName: username
-            })
-        })
-        const jsonJoinResponse = await joinResponse.json();
-        console.log("Got response ", jsonJoinResponse);
-        console.log(jsonJoinResponse.playerIdentifier)
-        if (jsonJoinResponse.error) {
-            alert("Game does not exist vro.");
-        }
-        else {
-            setPlayerIdentifier(jsonJoinResponse.playerIdentifier);
-            setUsername(username);
-            setGameId(gameID);
-        }
-    }, []);
+        setUsername(username);
+    }
+
+    function getUserInfo(callType) {
+        setButtonContext(callType);
+        //switch (callType) {
+        //    case "createGame":
+        //        getAndSetGameDimension();
+        //        //getAndSetUsername();
+        //        break;
+        //    case "joinGame":
+        //        //getAndSetUsername();
+        //        break;
+        //    case "botGame":
+        //        getAndSetGameDimension();
+        //        //getAndSetUsername();
+        //        break;
+        //    default:
+        //        console.log("what")
+        //        return;
+        //}
+        // this is kind of really funny if i leave this here for now
+        setIsInfoRecieved(true);
+    }
 
     return (
         <div style={{
@@ -122,14 +66,14 @@ export function GameAutomation() {
                 width:"100%",
                 alignContent: "center",
               }}>
-                <button onClick={createGame} style={{
+                <button onClick={getUserInfo.bind(this, 'createGame')} style={{
                     width: "250px",
                     height: "50px",
                     fontSize: "20px"
                 }}>
                     create game
                 </button>
-                <button onClick={joinGame} style={{
+                <button onClick={getUserInfo.bind(this, 'joinGame')} style={{
                     width: "250px",
                     height: "50px",
                     fontSize: "20px"
@@ -138,7 +82,7 @@ export function GameAutomation() {
                 </button>
             </div>
             <div>
-                <button onClick={startComputerGame} style={{
+                <button onClick={getUserInfo.bind(this, 'botGame')} style={{
                     width: "250px",
                     height: "50px",
                     fontSize: "20px"
@@ -151,7 +95,7 @@ export function GameAutomation() {
 }
 
 export default function Moves() {
-    const { moveList, pathUrl, boardTree, playerNames, username } = useContext(StateContext);
+    const { moveList, pathUrl, username, spectatorStatus } = useContext(StateContext);
     const letters = ['A', 'B', 'C'];
     const undoMove = () => {
         fetch(pathUrl, {
@@ -202,14 +146,14 @@ export default function Moves() {
                     )}</li>
                 )}
             </ol>
-            {DEBUGMODE && <div>
+            {!spectatorStatus && (<div>
                 <button onClick={undoMove}>
                     Request Undo Move
                 </button>
-                <button onClick={doMoves}>
+                {DEBUGMODE && (<button onClick={doMoves}>
                     setMoveList
-                </button>
-            </div>}
+                </button>)}
+            </div>)}
         </div>
     )
 }

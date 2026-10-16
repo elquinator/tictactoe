@@ -13,11 +13,7 @@ export default function Board(props) {
     const rows=[0,1,2];
     const columns=[0,1,2];
     const letters=['A','B','C']
-    let wonByFlag=false;
     const boardActiveFlag=(props.treeNode.isActive && props.depth==1);
-    if (props.treeNode.wonBy!='') {
-        wonByFlag=true;
-    }
     return (
         <div id={"board-" + props.depth + "-" + props.row + "-" + props.column } style={{
             padding: `${(props.depth+1)*15}px`,
@@ -58,7 +54,7 @@ export default function Board(props) {
                               
                                 {props.depth===1 && (
                                     <button id={`cell-${props.treeNode.getFullRoute([row,column]).join('-')}`} onClick={(event) => {
-                                            props.handleMove(event,props.treeNode,row,column)
+                                            props.handleMove(props.treeNode,row,column)
                                         }
                                     } 
                                     style={{
@@ -72,11 +68,25 @@ export default function Board(props) {
                                         {props.treeNode.children[row][column].wonBy}
                                     </button>
                                 )}
-                                {row == 2 && props.depth == gameDimension ? <h1 style={{color:"rgb(134, 0, 0)"}}>{column+1}</h1> : ''}
                             </td>
                         ))}
                     </tr>
                 ))}
+                {props.depth === gameDimension &&( <tr>
+                    <td/>
+                    {columns.map((column) => (
+                        <td style={{
+                                marginLeft : "3px",
+                                position: "relative",
+                                margin: "0px",
+                                padding: "0px"
+                        }}>
+                            <h1 style={{ color: "rgb(134, 0, 0)" }}>
+                                {column + 1}
+                            </h1>
+                        </td>
+                    ))}
+                </tr>)}
             </table>
         </div>
     );
