@@ -1,46 +1,12 @@
-import {useCallback, useContext} from "react";
-import { debugLog, StateContext } from "./App";
+import {useContext} from "react";
+import { StateContext } from "./App";
 import logo from "./tictactoelogo.png"
-import { HOSTURL, DEBUGMODE } from "./constants";
-import { BoardTree } from "./util";
+import { DEBUGMODE } from "./constants";
 import _ from "lodash";
 
 export function MainMenu() {
-    const { setUsername, setGameDimension, setBoardTree, setButtonContext, setIsInfoRecieved } = useContext(StateContext)
+    const { setGamemodeSelected } = useContext(StateContext)
 
-    function getAndSetGameDimension() {
-        const gameDimension = parseInt(prompt("dimension of game you want to create:"));
-        setGameDimension(gameDimension);
-        setBoardTree(_.cloneDeep(new BoardTree(null, gameDimension, 0, 0)));
-    }
-
-    function getAndSetUsername() {
-        let username = prompt("Username:");
-        username = username === '' ? "unnamedLoser" : username;
-        setUsername(username);
-    }
-
-    function getUserInfo(callType) {
-        setButtonContext(callType);
-        //switch (callType) {
-        //    case "createGame":
-        //        getAndSetGameDimension();
-        //        //getAndSetUsername();
-        //        break;
-        //    case "joinGame":
-        //        //getAndSetUsername();
-        //        break;
-        //    case "botGame":
-        //        getAndSetGameDimension();
-        //        //getAndSetUsername();
-        //        break;
-        //    default:
-        //        console.log("what")
-        //        return;
-        //}
-        // this is kind of really funny if i leave this here for now
-        setIsInfoRecieved(true);
-    }
 
     return (
         <div style={{
@@ -66,14 +32,14 @@ export function MainMenu() {
                 width:"100%",
                 alignContent: "center",
               }}>
-                <button onClick={getUserInfo.bind(this, 'createGame')} style={{
+                <button onClick={setGamemodeSelected.bind(this, 'createGame')} style={{
                     width: "250px",
                     height: "50px",
                     fontSize: "20px"
                 }}>
                     create game
                 </button>
-                <button onClick={getUserInfo.bind(this, 'joinGame')} style={{
+                <button onClick={setGamemodeSelected.bind(this, 'joinGame')} style={{
                     width: "250px",
                     height: "50px",
                     fontSize: "20px"
@@ -82,7 +48,7 @@ export function MainMenu() {
                 </button>
             </div>
             <div>
-                <button onClick={getUserInfo.bind(this, 'botGame')} style={{
+                <button onClick={setGamemodeSelected.bind(this, 'botGame')} style={{
                     width: "250px",
                     height: "50px",
                     fontSize: "20px"
@@ -95,7 +61,7 @@ export function MainMenu() {
 }
 
 export default function Moves() {
-    const { moveList, pathUrl, username, spectatorStatus } = useContext(StateContext);
+    const { moveList, pathUrl, username, spectatorStatus, isUndoEnabled } = useContext(StateContext);
     const letters = ['A', 'B', 'C'];
     const undoMove = () => {
         fetch(pathUrl, {
@@ -147,9 +113,9 @@ export default function Moves() {
                 )}
             </ol>
             {!spectatorStatus && (<div>
-                <button onClick={undoMove}>
+                {isUndoEnabled && (<button onClick={undoMove}>
                     Request Undo Move
-                </button>
+                </button>)}
                 {DEBUGMODE && (<button onClick={doMoves}>
                     setMoveList
                 </button>)}

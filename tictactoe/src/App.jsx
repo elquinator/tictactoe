@@ -16,7 +16,7 @@ let pauseFetches = false
 export function Game() {
   const { boardTree, gameId, username, setPlayerNames, playerNames, setGameStarted, moveList,
     currentPlayer, setBoardTree, gameStarted, playerIdentifier, pathUrl, updateBoardTree,
-    setGameDimension, gameEnded, isInfoRecieved, isGameCreated } = useContext(StateContext);
+    setGameDimension, gameEnded, gamemodeSelected, isGameCreated } = useContext(StateContext);
   
   useEffect(() => {
     const moveInterval = setInterval(async () => {
@@ -117,11 +117,11 @@ export function Game() {
   return (
     <div className="App" style={{ position: "relative", fontFamily: "monospace" }}>
       <>
-        {!gameStarted && !isInfoRecieved && !isGameCreated && (<TitleScreen />)}
-        {!gameStarted && isInfoRecieved && !isGameCreated && (<RuleSelectionScreen/>)}
-        {!gameStarted && isInfoRecieved && isGameCreated && (<WaitingForPlayerScreen/>)}
-        {gameStarted && (<GameActiveScreen handleMove={handleMove} />)}
         {gameEnded && (<EndGameScreen/>)}
+        {!gameStarted && (gamemodeSelected === '') && !isGameCreated && (<TitleScreen />)}
+        {!gameStarted && (gamemodeSelected !== '') && !isGameCreated && (<RuleSelectionScreen/>)}
+        {!gameStarted && (gamemodeSelected !== '') && isGameCreated && (<WaitingForPlayerScreen/>)}
+        {gameStarted && (<GameActiveScreen handleMove={handleMove} />)}
       </>
     </div>
   );
@@ -141,9 +141,9 @@ export function StateProvider({ children }) {
   const [playerNames, setPlayerNames] = useState([]);
   const [gameDimension, setGameDimension] = useState(DEFAULT_DIM);
   const [spectatorStatus, setSpectatorStatus] = useState(false);
-  const [buttonContext, setButtonContext] = useState('createGame');
-  const [isInfoRecieved, setIsInfoRecieved] = useState(false);
+  const [gamemodeSelected, setGamemodeSelected] = useState('');
   const [isGameCreated, setIsGameCreated] = useState(false);
+  const [isUndoEnabled, setIsUndoEnabled] = useState(false);
   const pathUrl = useMemo(() => {
     return HOSTURL + '/' + gameId
   }, [gameId]);
@@ -174,9 +174,9 @@ export function StateProvider({ children }) {
   return (
     <StateContext.Provider value={{
       moveList, currentPlayer, boardTree, winDepth, gameStarted, username, gameId, playerIdentifier, playerNames, gameDimension, pathUrl, spectatorStatus, gameEnded,
-      gameWinner, pauseFetches, buttonContext, isInfoRecieved, isGameCreated, botDifficulty,
+      gameWinner, pauseFetches, gamemodeSelected, isGameCreated, botDifficulty, isUndoEnabled,
       setMoveList, setBoardTree, setWinDepth, setGameStarted, setUsername, setGameId, setPlayerIdentifier, setPlayerNames, setGameDimension,
-      updateBoardTree, setSpectatorStatus, setButtonContext, setIsInfoRecieved, setIsGameCreated, setBotDifficulty
+      updateBoardTree, setSpectatorStatus, setGamemodeSelected, setIsGameCreated, setBotDifficulty, setIsUndoEnabled
     }}>
       {children}
     </StateContext.Provider>

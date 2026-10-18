@@ -5,22 +5,38 @@ import { GameInfo } from "./GameInfo"
 import Moves, { MainMenu } from "./Moves"
 import { PLAYERS, HOSTURL } from "./constants"
 import { BoardTree } from "./util";
-import _, { create } from "lodash"
+import _ from "lodash"
 
 export function EndGameScreen() {
     const { gameWinner, playerIdentifier } = useContext(StateContext);
     return (
-        <div>
-            <h1
-                style={{
-                    color: `${gameWinner === '-' ? 'grey' : gameWinner === playerIdentifier ? 'green' : 'red'}`
-                }}
-            >
-                {gameWinner === '-' ? 'Draw!' : gameWinner === playerIdentifier ? 'You Won!' : 'You Lost!'}
-            </h1>
-            <p1>
-                {gameWinner === '-' ? 'All that time for nothing' : `${gameWinner} Won`}
-            </p1>
+        <div style={{
+            position: "fixed",
+            display: "grid",
+            height: "100vh",
+            width: "100vh",
+            placeContent: "center",
+            zIndex: "1"
+        }}>
+            <div style={{
+                backgroundColor: "#838383dc",
+                padding: "30px",
+                width: "100vh",
+                border: "1px solid black"
+            }}>
+                <h1
+                    style={{
+                        color: `${gameWinner === '-' ? 'grey' : gameWinner === playerIdentifier ? 'green' : '#940000'}`,
+                        textShadow: "3px 4px 1px #120000",
+                        fontSize: "4em"
+                    }}
+                >
+                    {gameWinner === '-' ? 'Draw!' : gameWinner === playerIdentifier ? 'You Won!' : 'You Lost!'}
+                </h1>
+                <p1>
+                    {gameWinner === '-' ? 'All that time for nothing' : `${gameWinner} Won`}
+                </p1>
+            </div>
         </div>
     )
 }
@@ -104,9 +120,9 @@ function GetDimension() {
     return (
         <div>
             <label>
-                dimension:
+                dimension: 
             </label>
-            <input type='number' id='gameDimension' min='1' placeholder="1" required/>
+            <input type='number' id='gameDimension' min='1' max='6' placeholder="1" required/>
         </div>
     )
 }
@@ -115,7 +131,7 @@ function GetUserName() {
     return (
         <div>
             <label>
-                username:
+                username:                              
             </label>
             <input type='text' id='username' placeholder="username" required/>
         </div>
@@ -135,7 +151,6 @@ function GetGameId() {
 
 function PlayerSelect() {
     const { playerIdentifier, setPlayerIdentifier } = useContext(StateContext);
-    console.log(playerIdentifier)
     const handleButtonChange = (event) => {
         setPlayerIdentifier(event.target.value);
     }
@@ -178,7 +193,6 @@ function PlayerSelect() {
 
 function DifficultySelect() {
     const { botDifficulty, setBotDifficulty } = useContext(StateContext)
-    console.log(`meow: ${botDifficulty}`)
     const handleButtonChange = (event) => {
         setBotDifficulty(event.target.value);
     }
@@ -229,8 +243,25 @@ function DifficultySelect() {
     )
 }
 
+function MiscRuleSelect() {
+    const { setIsUndoEnabled } = useContext(StateContext)
+    return (
+        <div style={{ marginTop: "25px" }}>
+            <h3>
+                Extra Options:
+            </h3>
+            <label>
+                Enable Undos
+            </label>
+            <input type="checkbox" id="enableUndos" onChange={setIsUndoEnabled.bind(this, true)}/>
+        </div>
+    )
+}
+
 export function RuleSelectionScreen() {
-    const { buttonContext, setIsGameCreated, setGameId, setSpectatorStatus, playerIdentifier, setPlayerIdentifier, botDifficulty, setUsername, setGameDimension, setBoardTree } = useContext(StateContext);
+    const { gamemodeSelected, setIsGameCreated, setGameId, setSpectatorStatus, playerIdentifier,
+        setPlayerIdentifier, botDifficulty, setUsername, setGameDimension, setBoardTree, setGamemodeSelected,
+        isUndoEnabled, setIsUndoEnabled } = useContext(StateContext);
 
     const joinGame = useCallback(async (gameId) => {
         if (!/^[0-9]{1,6}$/.test(gameId)) {
@@ -247,7 +278,7 @@ export function RuleSelectionScreen() {
                 'Content-Type': 'application/json',
             },
             body: JSON.stringify({
-                action: buttonContext === 'botGame' ? 'playComputer' : 'join',
+                action: gamemodeSelected === 'botGame' ? 'playComputer' : 'join',
                 playerName: username,
                 playerIdentifier: playerIdentifier,
                 botDifficulty: botDifficulty
@@ -255,13 +286,14 @@ export function RuleSelectionScreen() {
         });
         const jsonResponse = await response.json();
         setPlayerIdentifier(jsonResponse.playerIdentifier);
+        setIsUndoEnabled(jsonResponse.undoEnabled);
         if (jsonResponse.error) {
             alert("Game does not exist vro.");
         }
         else if (jsonResponse.response === "game is full") {
             setSpectatorStatus(true);
         }
-    }, [botDifficulty, playerIdentifier, buttonContext]);
+    }, [botDifficulty, playerIdentifier, gamemodeSelected]);
 
     const createGame = useCallback(async () => {
         const dimensionBox = Number(document.getElementById('gameDimension').value);
@@ -273,45 +305,63 @@ export function RuleSelectionScreen() {
                 'Content-Type': 'application/json',
             },
             body: JSON.stringify({
-                gameDimension: dimensionBox
+                gameDimension: dimensionBox,
+                undoEnabled: isUndoEnabled
             })
         });
         const jsonResponse = await response.json();
         const gameId = jsonResponse.gameID;
         joinGame(gameId);
         setIsGameCreated(true);
-    }, [joinGame]);
+    }, [joinGame, isUndoEnabled]);
 
     const formSubmit = (event) => {
         event.preventDefault();
-        console.log(buttonContext)
-        switch (buttonContext) {
-            case "createGame":
-                createGame();
-                break;
+        switch (gamemodeSelected) {
             case "joinGame":
                 joinGame()
                 break;
-            default:
-                alert("what")
+            default: // should be both case createGame and botGame
                 createGame();
+                break;
         }
     }
 
     return (
-            <form onSubmit={formSubmit}>
-                <PlayerInfo />
-                <GetUserName />
-                {buttonContext === "joinGame" ? (<GetGameId />) : (<GetDimension />)}
-                {!(buttonContext === "joinGame") && <PlayerSelect />}
-                {(buttonContext === "botGame") && <DifficultySelect />}
-                <div style={{ 
-                    marginTop: "200px"
-                }}>
-                    <button type="submit" >
-                        Start!
-                    </button>
-                </div>
-            </form>
+        <form onSubmit={formSubmit} style={{
+            position: "fixed",
+            height: "100%",
+            width: "100%"
+        }}>
+            <PlayerInfo />
+            <GetUserName />
+            {gamemodeSelected === "joinGame" ? (<GetGameId />) : (<GetDimension />)}
+            {!(gamemodeSelected === "joinGame") && <PlayerSelect />}
+            {(gamemodeSelected === "botGame") && <DifficultySelect />}
+            {!(gamemodeSelected === "joinGame") && <MiscRuleSelect />}
+            <div style={{
+                position: "absolute",
+                width: "100%",
+                bottom: "0px",
+                display: "flex",
+                justifyContent: "center",
+                marginBottom: "100px"
+            }} >
+                <button onClick={setGamemodeSelected.bind(this, "")} style={{
+                    marginRight: "20px",
+                    height: "25px",
+                    width: "50px"
+                }} >
+                    Back
+                </button>
+                <button type="submit" style={{ 
+                    justifyContent: "center",
+                    height: "25px",
+                    width: "50px"
+            }} >
+                    Start!
+                </button>
+            </div>
+        </form>
     )
 }
