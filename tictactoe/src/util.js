@@ -114,6 +114,7 @@ export const evaluateMoveOnBoardTree = (playerCurrent, currentMove, boardTree, s
   if (!serverQuery) {
     boardTree.setActiveStatus(calculateShift([treeNode, currentMove[currentMove.length - 2], currentMove[currentMove.length - 1], winDepth]));
   }
+  return boardTree
 }
 
 export const evaluateMovesOnBoardTree = (localMoveList, moveList, boardTree, serverQuery = false) => {

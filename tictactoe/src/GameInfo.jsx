@@ -2,7 +2,7 @@ import { useContext } from "react"
 import { StateContext } from "./App"
 
 export function GameInfo() {
-    const {gameId, playerNames} = useContext(StateContext)
+    const {gameId, playerNames, dimension} = useContext(StateContext)
     return (
         <div style={{
             position: "relative",
@@ -12,6 +12,7 @@ export function GameInfo() {
             <p style={{
                 fontSize: "25px"
             }}>
+                dimension: {dimension}<br />
                 vsync: ON<br />
                 fps: 165<br/>
                 ping: 25ms<br />

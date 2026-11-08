@@ -4,8 +4,9 @@ import logo from "./tictactoelogo.png"
 import { DEBUGMODE } from "./constants";
 import _ from "lodash";
 
+
 export function MainMenu() {
-    const { setGamemodeSelected } = useContext(StateContext)
+    const { setGamemodeSelected, setAnalysisMode } = useContext(StateContext)
 
 
     return (
@@ -54,6 +55,11 @@ export function MainMenu() {
                     fontSize: "20px"
                 }}>
                     play bot
+                </button>
+            </div>
+            <div>
+                <button onClick={setAnalysisMode.bind(this, true)}>
+                    analysis
                 </button>
             </div>
         </div>

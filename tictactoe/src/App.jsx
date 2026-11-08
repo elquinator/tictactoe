@@ -4,8 +4,9 @@ import _ from "lodash";
 import { BoardTree, evaluateMovesOnBoardTree, getAvailableMoves } from './util';
 import { PLAYERS, HOSTURL } from './constants';
 import { EndGameScreen, GameActiveScreen, RuleSelectionScreen, TitleScreen, WaitingForPlayerScreen } from './GameStatusScreens';
+import { AnalysisMode } from './AnalysisMode';
 
-const DEFAULT_DIM = 3;
+const DEFAULT_DIM = 1;
 export const StateContext = createContext({
   moveList: [], currentPlayer: 'X', boardTree: new BoardTree(null, DEFAULT_DIM, 0, 0),
   winDepth: 0, gameStarted: false, username: '', gameId: '', playerIdentifier: '', playerNames: []
@@ -16,7 +17,7 @@ let pauseFetches = false
 export function Game() {
   const { boardTree, gameId, username, setPlayerNames, playerNames, setGameStarted, moveList,
     currentPlayer, setBoardTree, gameStarted, playerIdentifier, pathUrl, updateBoardTree,
-    setGameDimension, gameEnded, gamemodeSelected, isGameCreated } = useContext(StateContext);
+    setGameDimension, gameEnded, gamemodeSelected, isGameCreated, analysisMode } = useContext(StateContext);
   
   useEffect(() => {
     const moveInterval = setInterval(async () => {
@@ -117,8 +118,10 @@ export function Game() {
   return (
     <div className="App" style={{ position: "relative", fontFamily: "monospace" }}>
       <>
+        {analysisMode && <AnalysisMode/>}
+
         {gameEnded && (<EndGameScreen/>)}
-        {!gameStarted && (gamemodeSelected === '') && !isGameCreated && (<TitleScreen />)}
+        {!gameStarted && (gamemodeSelected === '') && !isGameCreated && !analysisMode && (<TitleScreen />)}
         {!gameStarted && (gamemodeSelected !== '') && !isGameCreated && (<RuleSelectionScreen/>)}
         {!gameStarted && (gamemodeSelected !== '') && isGameCreated && (<WaitingForPlayerScreen/>)}
         {gameStarted && (<GameActiveScreen handleMove={handleMove} />)}
@@ -134,7 +137,7 @@ export function StateProvider({ children }) {
   const [gameStarted, setGameStarted] = useState(false);
   const [gameEnded, setGameEnded] = useState(false);
   const [gameWinner, setGameWinner] = useState('');
-  const [username, setUsername] = useState('');
+  const [username, setUsername] = useState('unnamedLoser');
   const [gameId, setGameId] = useState('');
   const [playerIdentifier, setPlayerIdentifier] = useState('-');
   const [botDifficulty, setBotDifficulty] = useState('medium');
@@ -144,6 +147,9 @@ export function StateProvider({ children }) {
   const [gamemodeSelected, setGamemodeSelected] = useState('');
   const [isGameCreated, setIsGameCreated] = useState(false);
   const [isUndoEnabled, setIsUndoEnabled] = useState(false);
+  const [ analysisModeToken, setAnalysisModeToken ] = useState('');
+  const [analysisMode, setAnalysisMode] = useState(false);
+  const [botPlayingAs, setBotPlayingAs] = useState('X');
   const pathUrl = useMemo(() => {
     return HOSTURL + '/' + gameId
   }, [gameId]);
@@ -174,9 +180,9 @@ export function StateProvider({ children }) {
   return (
     <StateContext.Provider value={{
       moveList, currentPlayer, boardTree, winDepth, gameStarted, username, gameId, playerIdentifier, playerNames, gameDimension, pathUrl, spectatorStatus, gameEnded,
-      gameWinner, pauseFetches, gamemodeSelected, isGameCreated, botDifficulty, isUndoEnabled,
+      gameWinner, pauseFetches, gamemodeSelected, isGameCreated, botDifficulty, isUndoEnabled, analysisMode, analysisModeToken, botPlayingAs,
       setMoveList, setBoardTree, setWinDepth, setGameStarted, setUsername, setGameId, setPlayerIdentifier, setPlayerNames, setGameDimension,
-      updateBoardTree, setSpectatorStatus, setGamemodeSelected, setIsGameCreated, setBotDifficulty, setIsUndoEnabled
+      updateBoardTree, setSpectatorStatus, setGamemodeSelected, setIsGameCreated, setBotDifficulty, setIsUndoEnabled, setAnalysisMode, setAnalysisModeToken, setBotPlayingAs
     }}>
       {children}
     </StateContext.Provider>

@@ -14,14 +14,14 @@ export function EndGameScreen() {
             position: "fixed",
             display: "grid",
             height: "100vh",
-            width: "100vh",
+            width: "100vw",
             placeContent: "center",
             zIndex: "1"
         }}>
             <div style={{
                 backgroundColor: "#838383dc",
                 padding: "30px",
-                width: "100vh",
+                width: "100vw",
                 border: "1px solid black"
             }}>
                 <h1
@@ -116,24 +116,31 @@ function PlayerInfo() {
     )
 }
 
-function GetDimension() {
+function updateDimension(dimension, setGameDimension, setBoardTree) {
+    setGameDimension(dimension)
+    setBoardTree(new BoardTree(null, dimension, 0, 0))
+}
+
+export function GetDimension() {
+    const { gameDimension, setGameDimension, setBoardTree } = useContext(StateContext);
     return (
         <div>
             <label>
                 dimension: 
             </label>
-            <input type='number' id='gameDimension' min='1' max='6' placeholder="1" required/>
+            <input type='number' id='gameDimension' value={gameDimension} onChange={(event) => {updateDimension(event.target.value, setGameDimension, setBoardTree)}} min='1' max='6' placeholder="#" required/>
         </div>
     )
 }
 
 function GetUserName() {
+    const { setUsername } = useContext(StateContext);
     return (
         <div>
             <label>
                 username:                              
             </label>
-            <input type='text' id='username' placeholder="username" required/>
+            <input type='text' id='username' onChange={(event) => setUsername(event.target.value)} placeholder="username"/>
         </div>
     )
 }
@@ -261,7 +268,7 @@ function MiscRuleSelect() {
 export function RuleSelectionScreen() {
     const { gamemodeSelected, setIsGameCreated, setGameId, setSpectatorStatus, playerIdentifier,
         setPlayerIdentifier, botDifficulty, setUsername, setGameDimension, setBoardTree, setGamemodeSelected,
-        isUndoEnabled, setIsUndoEnabled } = useContext(StateContext);
+        isUndoEnabled, setIsUndoEnabled, gameDimension } = useContext(StateContext);
 
     const joinGame = useCallback(async (gameId) => {
         if (!/^[0-9]{1,6}$/.test(gameId)) {
@@ -296,16 +303,16 @@ export function RuleSelectionScreen() {
     }, [botDifficulty, playerIdentifier, gamemodeSelected]);
 
     const createGame = useCallback(async () => {
-        const dimensionBox = Number(document.getElementById('gameDimension').value);
-        setGameDimension(dimensionBox);
-        setBoardTree(_.cloneDeep(new BoardTree(null, dimensionBox, 0, 0)));
+//        const dimensionBox = Number(document.getElementById('gameDimension').value);
+//        setGameDimension(dimensionBox);
+//        setBoardTree(_.cloneDeep(new BoardTree(null, dimensionBox, 0, 0)));
         const response = await fetch(HOSTURL, {
             method: "POST",
             headers: {
                 'Content-Type': 'application/json',
             },
             body: JSON.stringify({
-                gameDimension: dimensionBox,
+                gameDimension: gameDimension,
                 undoEnabled: isUndoEnabled
             })
         });
@@ -313,7 +320,7 @@ export function RuleSelectionScreen() {
         const gameId = jsonResponse.gameID;
         joinGame(gameId);
         setIsGameCreated(true);
-    }, [joinGame, isUndoEnabled]);
+    }, [joinGame, isUndoEnabled, gameDimension]);
 
     const formSubmit = (event) => {
         event.preventDefault();
